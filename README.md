@@ -7,7 +7,7 @@ Aplicación local para hacer cotizaciones y generar su PDF.
 - IVA opcional por cotización; el envío va aparte y no lleva IVA.
 - Historial con búsqueda, estados (Borrador / Enviada / Aceptada / Rechazada), cotizaciones vencidas en rojo, editar, duplicar y volver a generar el PDF.
 
-**Stack:** Java 21 · Spring Boot 4 · Thymeleaf · SQLite · OpenHTMLtoPDF
+**Stack:** Java 21 · Spring Boot 4 · Spring Data JPA (Hibernate) · Spring Security · Thymeleaf · SQLite + Flyway · OpenHTMLtoPDF
 
 ## Ejecutar
 
@@ -17,6 +17,9 @@ java -jar target/edcotizacion.jar
 ```
 
 Se abre el navegador en http://localhost:8090. Desde NetBeans basta con *Run*.
+
+Pruebas: `mvn test` (unitarias) o `mvn verify` (también las de integración `*IT`, que levantan la
+app completa con una base SQLite temporal; nunca tocan `~/EDCotizacion`).
 
 ## Dónde quedan los datos
 
@@ -92,7 +95,8 @@ En Windows, para `--type exe` agrega `--win-shortcut --win-menu` (requiere WiX T
 
 ```
 src/main/java/com/edcotizacion/
-├── cotizacion/   Cotizacion, Partida, cálculos (Montos), servicio y repositorio
+├── comun/        Utilidades (búsqueda sin acentos, textos, convertidores JPA)
+├── cotizacion/   Entidades Cotizacion/Partida, formulario (records), cálculos (Montos), servicio
 ├── cliente/      Alta automática y autocompletado
 ├── producto/     Alta automática, último costo/precio y autocompletado
 ├── pdf/          Diseño (bloques) + datos de empresa → HTML (Thymeleaf) → PDF
