@@ -27,7 +27,7 @@ import com.edcotizacion.pdf.PdfService;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/** Editor visual de la plantilla del PDF (arrastrar y soltar bloques). */
+/** Editor de la plantilla del PDF: se edita directo sobre la hoja. */
 @Controller
 @RequestMapping("/configuracion/plantilla")
 public class PlantillaController {
@@ -53,16 +53,21 @@ public class PlantillaController {
 
     @GetMapping
     public String editor(Model model) {
-        model.addAttribute("datosJson", json.writeValueAsString(new Datos(disenos.diseno(), disenos.empresa())));
+        model.addAttribute("datosJson", json.writeValueAsString(
+                Map.of("diseno", disenos.diseno(), "empresa", disenos.empresa())));
         model.addAttribute("genericoJson", json.writeValueAsString(disenos.generico()));
+        model.addAttribute("ejemplosJson", json.writeValueAsString(disenos.ejemplos()));
         return "plantilla";
     }
 
-    /** HTML de la hoja con una cotización de ejemplo, para el lienzo del editor (sin guardar). */
+    /**
+     * HTML de la hoja con una cotización de ejemplo (sin guardar). editor=true agrega los textos
+     * de ayuda y botones; sin él se ve como el PDF (miniaturas de la galería).
+     */
     @PostMapping(value = "/vista", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
-    public String vista(@RequestBody Datos d) {
-        return pdf.html(muestra(), d.diseno(), d.empresa());
+    public String vista(@RequestBody Datos d, @RequestParam(defaultValue = "false") boolean editor) {
+        return pdf.html(muestra(), disenos.normalizar(d.diseno()), d.empresa(), editor);
     }
 
     @PostMapping
@@ -77,7 +82,7 @@ public class PlantillaController {
     public ResponseEntity<byte[]> muestraSinGuardar(@RequestParam String datos) throws IOException {
         Datos d = json.readValue(datos, Datos.class);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
-                .body(pdf.generar(muestra(), d.diseno(), d.empresa()));
+                .body(pdf.generar(muestra(), disenos.normalizar(d.diseno()), d.empresa()));
     }
 
     /** PDF de ejemplo con la plantilla guardada. */

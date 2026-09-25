@@ -1,7 +1,7 @@
-/* Editor visual de la plantilla del PDF.
-   El diseño es una lista de bloques; el servidor lo convierte a HTML (el mismo que usa
-   el PDF) y aquí se muestra en una "hoja" dentro de un Shadow DOM para que los estilos
-   de la app no se mezclen. Arrastrar y soltar reordena la lista y se vuelve a pintar. */
+/* Editor de la plantilla del PDF: se edita directo sobre la hoja.
+   El servidor arma el HTML (el mismo del PDF, con editor=true) y aquí se muestra dentro de
+   un Shadow DOM. Los elementos con data-editar="ruta" se vuelven editables; los que tienen
+   data-accion son botones (subir logo, agregar/quitar secciones). */
 (() => {
     'use strict';
 
@@ -9,113 +9,41 @@
     const base = () => $('.barra .logo').getAttribute('href').replace(/\/?$/, '/');
     const URL_PLANTILLA = base() + 'configuracion/plantilla';
 
-    // ---------- tipos de bloque ----------
-
-    const COLORES = [['texto', 'Texto'], ['primario', 'Principal'], ['acento', 'Acento'], ['gris', 'Gris']];
-    const PALETAS = [
-        ['Azul', '#243B53', '#3E7CB1'],
-        ['Verde azulado', '#184E62', '#1A9C8D'],
-        ['Vino', '#5B1A2E', '#C0392B'],
-        ['Grafito', '#2D3436', '#E67E22'],
-        ['Bosque', '#1E4D2B', '#43A047'],
-        ['Morado', '#3D2C5E', '#8E6CCF'],
-    ];
-
-    // campos: [clave, etiqueta, tipo de control, opciones]
-    const TIPOS = {
-        encabezado: {
-            nombre: 'Encabezado', icono: '▀', unico: true,
-            nuevo: { titulo: 'COTIZACIÓN', logo: true, nombre: true, dosTonos: true, mayusculas: true, lema: true },
-            campos: [['titulo', 'Título', 'texto'], ['logo', 'Mostrar logo', 'check'],
-                ['nombre', 'Mostrar nombre de la empresa', 'check'], ['dosTonos', 'Nombre en dos colores', 'check'],
-                ['mayusculas', 'Nombre en MAYÚSCULAS', 'check'], ['lema', 'Mostrar lema', 'check']],
-            nota: 'El logo, el nombre y el lema se cambian en la pestaña Empresa. Folio, fecha y vigencia los pone cada cotización.',
-        },
-        partes: {
-            nombre: 'Proveedor y cliente', icono: '▥', unico: true,
-            nuevo: { tituloProveedor: 'DATOS DEL PROVEEDOR', tituloCliente: 'COTIZADO A' },
-            campos: [['tituloProveedor', 'Título del proveedor', 'texto'], ['tituloCliente', 'Título del cliente', 'texto']],
-            nota: 'Tus datos se editan en la pestaña Empresa. Los que dejes vacíos no se imprimen.',
-        },
-        detalle: {
-            nombre: 'Tabla de productos', icono: '☰', unico: true,
-            nuevo: { titulo: 'Detalle de productos y servicios', numero: true },
-            campos: [['titulo', 'Título (vacío = sin título)', 'texto'], ['numero', 'Columna # (número de partida)', 'check']],
-        },
-        totales: {
-            nombre: 'Totales', icono: 'Σ', unico: true, nuevo: {}, campos: [],
-            nota: 'Subtotal, IVA, envío y total se calculan solos en cada cotización.',
-        },
-        condiciones: {
-            nombre: 'Condiciones comerciales', icono: '✓', unico: true,
-            nuevo: { titulo: 'Condiciones comerciales' },
-            campos: [['titulo', 'Título (vacío = sin título)', 'texto']],
-            nota: 'Los textos se capturan en cada cotización; los de por defecto están en Configuración.',
-        },
-        titulo: {
-            nombre: 'Título', icono: 'T',
-            nuevo: { texto: 'Nuevo título', color: 'primario', alineacion: 'izquierda' },
-            campos: [['texto', 'Texto', 'texto'], ['color', 'Color', 'color'], ['alineacion', 'Alineación', 'alinear']],
-        },
-        texto: {
-            nombre: 'Párrafo', icono: '¶',
-            nuevo: { texto: 'Escribe aquí tu texto…', tamano: 9, alineacion: 'izquierda', color: 'texto', negrita: false },
-            campos: [['texto', 'Texto', 'area'], ['tamano', 'Tamaño de letra', 'numero', { min: 6, max: 30, step: 0.5 }],
-                ['alineacion', 'Alineación', 'alinear'], ['color', 'Color', 'color'], ['negrita', 'Negrita', 'check']],
-        },
-        imagen: {
-            nombre: 'Imagen', icono: '▣',
-            nuevo: { alto: 60, alineacion: 'centro' },
-            campos: [['imagen', 'Imagen', 'imagen'], ['alto', 'Alto (puntos)', 'numero', { min: 10, max: 600, step: 5 }],
-                ['alineacion', 'Alineación', 'alinear']],
-        },
-        firma: {
-            nombre: 'Firma', icono: '✍',
-            nuevo: { nombre: '', puesto: 'Ejecutivo de ventas', alineacion: 'centro' },
-            campos: [['nombre', 'Nombre (vacío = el ejecutivo)', 'texto'], ['puesto', 'Puesto', 'texto'],
-                ['alineacion', 'Alineación', 'alinear']],
-        },
-        linea: {
-            nombre: 'Línea', icono: '―', nuevo: { color: 'acento' },
-            campos: [['color', 'Color', 'color']],
-        },
-        espacio: {
-            nombre: 'Espacio', icono: '↕', nuevo: { alto: 12 },
-            campos: [['alto', 'Alto (puntos)', 'numero', { min: 1, max: 400, step: 1 }]],
-        },
-        salto: {
-            nombre: 'Salto de página', icono: '⤓', nuevo: {}, campos: [],
-            nota: 'Todo lo que esté debajo empieza en una hoja nueva.',
-        },
-        pie: {
-            nombre: 'Pie de página', fijo: true,
-            campos: [['texto', 'Texto (se repite en cada hoja)', 'texto', { vineta: true }], ['paginas', 'Número de página', 'check']],
-        },
+    const csrf = () => {
+        const t = $('meta[name=_csrf]');
+        return t ? { [$('meta[name=_csrf_header]').content]: t.content } : {};
     };
+    const postJson = (url, cuerpo) => fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...csrf() }, body: cuerpo,
+    });
 
-    const CAMPOS_EMPRESA = [
-        ['nombre', 'Nombre de la empresa'], ['lema', 'Lema / eslogan'], ['rfc', 'RFC'], ['telefono', 'Teléfono'],
-        ['correo', 'Correo'], ['web', 'Página web'], ['direccion', 'Dirección'], ['ejecutivo', 'Ejecutivo / vendedor'],
+    const OPCIONES = [
+        ['mostrarNombre', 'Mostrar el nombre de la empresa en el encabezado'],
+        ['mayusculas', 'Nombre en MAYÚSCULAS'],
+        ['numeroPartida', 'Columna # en la tabla'],
+        ['paginas', 'Número de página en el pie'],
     ];
+
+    // contentEditable "plaintext-only" evita que se peguen formatos; si el navegador no lo soporta se usa "true"
+    const EDITABLE = (() => {
+        try {
+            const d = document.createElement('div');
+            d.contentEditable = 'plaintext-only';
+            return d.contentEditable === 'plaintext-only' ? 'plaintext-only' : 'true';
+        } catch {
+            return 'true';
+        }
+    })();
 
     // ---------- estado e historial ----------
 
     let datos = PLANTILLA;
     datos.empresa = datos.empresa || {};
-    datos.diseno.pie = datos.diseno.pie || { texto: '', paginas: false };
-    datos.diseno.estilo = datos.diseno.estilo || {};
-
-    let sel = null;           // id del bloque seleccionado ('pie' para el pie)
-    let arrastre = null;      // { nuevo: tipo } o { mover: id }
     let historial = [JSON.stringify(datos)];
     let pos = 0;
     let guardado = historial[0];
     let ultimaFusion = { clave: null, t: 0 };
-
-    const bloques = () => datos.diseno.bloques;
-    const bloque = (id) => (id === 'pie' ? datos.diseno.pie : bloques().find((b) => b.id === id));
-    const tipoDe = (id) => (id === 'pie' ? 'pie' : bloque(id)?.tipo);
-    const nuevoId = () => 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    let vistaAtrasada = false; // hubo tecleo que aún no se refleja en toda la hoja (p. ej. nombre en dos colores)
 
     /** Registra un cambio ya hecho en `datos`. `fusionar` junta tecleos seguidos en un solo paso de deshacer. */
     function cambio(fusionar) {
@@ -131,7 +59,6 @@
         }
         ultimaFusion = { clave: fusionar, t: ahora };
         estado();
-        pintarLuego();
     }
 
     function irA(n) {
@@ -139,9 +66,9 @@
         pos = n;
         datos = JSON.parse(historial[pos]);
         ultimaFusion = { clave: null, t: 0 };
-        if (sel && !bloque(sel)) sel = null;
         estado();
-        pintarTodo();
+        pintarBarra();
+        pintarHoja();
     }
 
     function estado() {
@@ -159,352 +86,206 @@
         t.className = 'toast' + (error ? ' error' : '');
         t.textContent = texto;
         document.body.appendChild(t);
-        setTimeout(() => t.remove(), error ? 5000 : 2200);
+        setTimeout(() => t.remove(), error ? 5000 : 2400);
     }
 
-    // ---------- hoja (vista previa) ----------
+    /** "empresa.rfc" -> [datos.empresa, 'rfc']; "textos.titulo" -> [datos.diseno.textos, 'titulo']; "banco.texto" -> [datos.diseno.banco, 'texto'] */
+    function ref(ruta) {
+        const [grupo, clave] = ruta.split('.');
+        if (grupo === 'empresa') return [datos.empresa, clave];
+        const d = datos.diseno;
+        if (!d[grupo] || typeof d[grupo] !== 'object') d[grupo] = {};
+        return [d[grupo], clave];
+    }
+
+    // ---------- hoja ----------
 
     const host = $('#hoja-host');
     const raiz = host.attachShadow({ mode: 'open' });
     let pedido = 0;
-    let timer;
 
-    const CSS_EDITOR = `
+    const CSS_HOJA = `
         :host { display: block; }
         .hoja { position: relative; width: 612pt; min-height: 792pt; box-sizing: border-box;
-                padding: 60pt 46pt 48pt; background: #fff; box-shadow: 0 3px 18px rgba(0,0,0,.16);
+                padding: 50pt 42pt 48pt; background: #fff; box-shadow: 0 3px 18px rgba(0,0,0,.16);
                 display: flex; flex-direction: column; }
-        .hoja > .pie { order: 99; margin-top: auto; padding-top: 30pt; }
-        .blq, .pie { position: relative; outline: 1.5px dashed transparent; outline-offset: 3px; cursor: pointer; }
-        .blq { cursor: grab; }
-        .blq:hover, .pie:hover { outline-color: #9DB8C4; }
-        .sel, .sel:hover { outline: 2px solid #1A9C8D; }
-        .blq::before, .pie::before {
-            content: attr(data-etiqueta); position: absolute; left: -4px; top: -21px; z-index: 5;
-            font: 600 11px system-ui, sans-serif; color: #fff; background: #7B96A2; padding: 2px 8px;
-            border-radius: 4px 4px 0 0; white-space: nowrap; pointer-events: none; display: none; }
-        .blq:hover::before, .pie:hover::before, .sel::before { display: block; }
-        .sel::before { background: #1A9C8D; }
-        .arrastrando { opacity: .35; }
-        .solo-editor { display: block; }
-        .hueco { border: 2px dashed #C9D6DA; color: #8A9AA0; text-align: center; padding: 18pt;
-                 font: 12px system-ui, sans-serif; border-radius: 4px; }
-        .salto-marca { border-top: 2px dashed #B0BEC5; color: #8A9AA0; font: 11px system-ui, sans-serif;
-                       text-align: center; padding-top: 3px; margin: 6pt 0; }
-        .blq-espacio { background: repeating-linear-gradient(45deg, transparent 0 6px, rgba(0,0,0,.035) 6px 12px); }
-        .blq-linea { padding: 2px 0; }
+        .hoja.a4 { width: 595pt; min-height: 842pt; }
+        .hoja > .pie { order: 99; margin-top: auto; padding-top: 24pt; }
         .np::after { content: "1 de 1"; }
-        .vacia { border: 2px dashed #C9D6DA; border-radius: 6px; color: #8A9AA0; text-align: center;
-                 padding: 60pt 20pt; font: 14px system-ui, sans-serif; }
-        .indicador { position: absolute; left: 30pt; right: 30pt; height: 4px; margin-top: -2px; background: #1A9C8D;
-                     border-radius: 2px; pointer-events: none; z-index: 10; display: none; }
-        .indicador::before, .indicador::after { content: ''; position: absolute; top: -4px; width: 12px; height: 12px;
-                     border-radius: 50%; background: #1A9C8D; }
-        .indicador::before { left: -6px; }
-        .indicador::after { right: -6px; }
+    `;
+    const CSS_EDITOR = `
+        .solo-editor { display: block; }
+        [data-editar] { outline: 1.5px dashed transparent; outline-offset: 2px; border-radius: 2px; cursor: text; }
+        [data-editar]:hover { outline-color: rgba(26,156,141,.65); background-color: rgba(26,156,141,.07); }
+        [data-editar]:focus { outline: 2px solid #1A9C8D; }
+        span[data-editar] { display: inline-block; min-width: 50px; }
+        [data-editar]:empty::before { content: attr(data-ph); color: #9AA7AD; font-style: italic; font-weight: normal;
+                                      text-transform: none; letter-spacing: 0; }
+        .subir-logo { border: 1.5px dashed currentColor; border-radius: 6px; padding: 10px 16px; margin-bottom: 8px;
+                      width: 150px; text-align: center; color: #8A9AA0; font: 13px/1.3 system-ui, sans-serif; cursor: pointer; }
+        .subir-logo small { font-size: 11px; }
+        .p-clasica .subir-logo { color: rgba(255,255,255,.75); }
+        .subir-logo:hover, .subir-logo.encima { background: rgba(26,156,141,.15); }
+        .logo-caja { position: relative; display: inline-block; cursor: pointer; }
+        .logo-caja.encima { outline: 2px dashed #1A9C8D; }
+        .extra, .firma-caja { position: relative; }
+        .quitar { display: none; position: absolute; top: -9px; right: -9px; z-index: 3; width: 20px; height: 20px;
+                  border-radius: 50%; background: #C0392B; color: #fff; font: 12px/20px system-ui, sans-serif;
+                  text-align: center; cursor: pointer; }
+        .logo-caja:hover .quitar, .extra:hover .quitar, .firma-caja:hover .quitar { display: block; }
+        .agregar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18pt; }
+        .agregar span { font: 13px system-ui, sans-serif; color: #2563EB; background: #EFF4FF; border: 1px dashed #A8BFF5;
+                        padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .agregar span:hover { background: #E0EAFF; }
     `;
 
-    function pintarLuego(ms = 120) {
-        clearTimeout(timer);
-        timer = setTimeout(pintarHoja, ms);
+    async function vista(diseno, editor) {
+        const r = await postJson(URL_PLANTILLA + '/vista' + (editor ? '?editor=true' : ''),
+            JSON.stringify({ diseno, empresa: datos.empresa }));
+        if (!r.ok) throw new Error('El servidor respondió ' + r.status);
+        const doc = new DOMParser().parseFromString(await r.text(), 'text/html');
+        const estilo = document.createElement('style');
+        estilo.textContent = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('\n')
+            + CSS_HOJA + (editor ? CSS_EDITOR : '');
+        const hoja = document.adoptNode(doc.querySelector('.hoja'));
+        hoja.classList.toggle('a4', diseno.papel === 'a4');
+        return [estilo, hoja];
     }
 
     async function pintarHoja() {
         const n = ++pedido;
-        let html;
+        vistaAtrasada = false;
+        let nodos;
         try {
-            const r = await fetch(URL_PLANTILLA + '/vista', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos),
-            });
-            if (!r.ok) throw new Error('El servidor respondió ' + r.status);
-            html = await r.text();
+            nodos = await vista(datos.diseno, true);
         } catch (e) {
-            if (n === pedido) aviso('No se pudo actualizar la vista previa: ' + e.message, true);
+            if (n === pedido) aviso('No se pudo actualizar la hoja: ' + e.message, true);
             return;
         }
         if (n !== pedido) return; // llegó una respuesta más nueva
 
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const estilo = document.createElement('style');
-        estilo.textContent = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('\n') + CSS_EDITOR;
-        const hoja = document.adoptNode(doc.querySelector('.hoja'));
-
-        hoja.querySelectorAll('[data-bloque]').forEach((el) => {
-            const t = TIPOS[el.dataset.tipo];
-            el.dataset.etiqueta = t ? t.nombre : el.dataset.tipo;
-            if (el.classList.contains('blq')) el.draggable = true;
-            el.classList.toggle('sel', el.dataset.bloque === sel);
+        // si se estaba escribiendo en un campo, se vuelve a poner el cursor ahí
+        const activo = raiz.activeElement?.dataset?.editar;
+        raiz.replaceChildren(...nodos);
+        raiz.querySelectorAll('[data-editar]').forEach((el) => {
+            el.contentEditable = EDITABLE;
+            el.spellcheck = false;
         });
-        if (!bloques().length) {
-            const v = document.createElement('div');
-            v.className = 'vacia';
-            v.textContent = 'La hoja está vacía. Arrastra aquí bloques de la izquierda.';
-            hoja.prepend(v);
+        if (activo) {
+            const el = raiz.querySelector(`[data-editar="${activo}"]`);
+            if (el) { el.focus(); cursorAlFinal(el); }
         }
-        const ind = document.createElement('div');
-        ind.className = 'indicador';
-        hoja.appendChild(ind);
-
-        raiz.replaceChildren(estilo, hoja);
+        ajustarZoom();
     }
 
-    function marcarSeleccion() {
-        raiz.querySelectorAll('[data-bloque]').forEach((el) => el.classList.toggle('sel', el.dataset.bloque === sel));
+    function cursorAlFinal(el) {
+        const r = document.createRange();
+        r.selectNodeContents(el);
+        r.collapse(false);
+        const s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
     }
 
     function ajustarZoom() {
-        const disponible = $('#lienzo').clientWidth - 48;
-        host.style.zoom = Math.min(1, disponible / 816).toFixed(3);
+        const ancho = datos.diseno.papel === 'a4' ? 793 : 816;
+        host.style.zoom = Math.min(1, ($('#lienzo').clientWidth - 48) / ancho).toFixed(3);
     }
 
-    // ---------- arrastrar y soltar ----------
+    const leer = (el) => {
+        let v = el.dataset.multi ? el.innerText : el.textContent;
+        if (el.dataset.multi && v.endsWith('\n')) v = v.slice(0, -1);
+        return v;
+    };
 
-    const piezas = () => [...raiz.querySelectorAll('.blq')];
-
-    /** Índice donde caería lo arrastrado según la altura del puntero. */
-    function destino(clientY) {
-        const lista = piezas();
-        for (let i = 0; i < lista.length; i++) {
-            const r = lista[i].getBoundingClientRect();
-            if (clientY < r.top + r.height / 2) return i;
-        }
-        return lista.length;
-    }
-
-    function indicador(i) {
-        const ind = $('.indicador', raiz);
-        if (!ind) return;
-        if (i == null) { ind.style.display = 'none'; return; }
-        const lista = piezas();
-        let y;
-        if (!lista.length) y = 60 * 4 / 3;
-        else if (i < lista.length) y = lista[i].offsetTop - 5;
-        else y = lista[lista.length - 1].offsetTop + lista[lista.length - 1].offsetHeight + 5;
-        ind.style.top = y + 'px';
-        ind.style.display = 'block';
-    }
-
-    function soltar(i) {
-        const lista = bloques();
-        if (arrastre.nuevo) {
-            const b = crear(arrastre.nuevo);
-            lista.splice(i, 0, b);
-            sel = b.id;
-        } else {
-            const de = lista.findIndex((b) => b.id === arrastre.mover);
-            if (de < 0 || i === de || i === de + 1) return;
-            const [b] = lista.splice(de, 1);
-            lista.splice(i > de ? i - 1 : i, 0, b);
-        }
-        cambio();
-        pintarPaleta();
-        pintarPanel();
-    }
-
-    function terminarArrastre() {
-        arrastre = null;
-        indicador(null);
-        raiz.querySelectorAll('.arrastrando').forEach((el) => el.classList.remove('arrastrando'));
-    }
-
-    raiz.addEventListener('dragstart', (e) => {
-        const el = e.target.closest?.('.blq');
+    raiz.addEventListener('input', (e) => {
+        const el = e.target.closest?.('[data-editar]');
         if (!el) return;
-        arrastre = { mover: el.dataset.bloque };
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', el.dataset.bloque);
-        el.classList.add('arrastrando');
+        const ruta = el.dataset.editar;
+        let v = leer(el);
+        if (!v.trim()) { v = ''; el.replaceChildren(); } // vacío: que se vea la ayuda
+        const [obj, k] = ref(ruta);
+        obj[k] = v;
+        // el mismo dato puede estar en dos lugares (nombre en el encabezado y en proveedor)
+        raiz.querySelectorAll(`[data-editar="${ruta}"]`).forEach((otro) => { if (otro !== el) otro.textContent = v; });
+        vistaAtrasada = true;
+        cambio('editar:' + ruta);
     });
-    raiz.addEventListener('dragover', (e) => {
-        if (!arrastre) return;
+
+    raiz.addEventListener('keydown', (e) => {
+        const el = e.target.closest?.('[data-editar]');
+        if (!el) return;
+        if ((e.key === 'Enter' && !el.dataset.multi) || e.key === 'Escape') {
+            e.preventDefault();
+            el.blur();
+        }
+    });
+
+    raiz.addEventListener('paste', (e) => {
+        if (EDITABLE === 'plaintext-only' || !e.target.closest?.('[data-editar]')) return;
         e.preventDefault();
-        e.dataTransfer.dropEffect = arrastre.nuevo ? 'copy' : 'move';
-        indicador(destino(e.clientY));
+        document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
     });
-    raiz.addEventListener('drop', (e) => {
-        if (!arrastre) return;
-        e.preventDefault();
-        const i = destino(e.clientY);
-        soltar(i);
-        terminarArrastre();
-    });
-    raiz.addEventListener('dragend', terminarArrastre);
-    host.addEventListener('dragleave', (e) => {
-        if (!host.contains(e.relatedTarget) && !raiz.contains(e.relatedTarget)) indicador(null);
-    });
-    // soltar en el fondo gris alrededor de la hoja también cuenta
-    $('#lienzo').addEventListener('dragover', (e) => {
-        if (!arrastre) return;
-        e.preventDefault();
-        indicador(destino(e.clientY));
-    });
-    $('#lienzo').addEventListener('drop', (e) => {
-        if (!arrastre) return;
-        e.preventDefault();
-        soltar(destino(e.clientY));
-        terminarArrastre();
+
+    // al salir de la edición (sin pasar a otro campo) se vuelve a dibujar la hoja completa
+    raiz.addEventListener('focusout', (e) => {
+        const siguiente = e.relatedTarget;
+        if (vistaAtrasada && !(siguiente && siguiente.closest?.('[data-editar]'))) pintarHoja();
     });
 
     raiz.addEventListener('click', (e) => {
-        const el = e.target.closest?.('[data-bloque]');
-        seleccionar(el ? el.dataset.bloque : null);
-    });
-    $('#lienzo').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) seleccionar(null);
-    });
-
-    function crear(tipo) {
-        return { id: nuevoId(), tipo, ...structuredClone(TIPOS[tipo].nuevo) };
-    }
-
-    function seleccionar(id) {
-        sel = id;
-        marcarSeleccion();
-        pestana('bloque');
-        pintarPanel();
-    }
-
-    // ---------- paleta de bloques ----------
-
-    function pintarPaleta() {
-        const cont = $('#paleta');
-        cont.innerHTML = '';
-        Object.entries(TIPOS).filter(([, t]) => !t.fijo).forEach(([tipo, t]) => {
-            const usado = t.unico && bloques().some((b) => b.tipo === tipo);
-            const p = document.createElement('div');
-            p.className = 'pieza' + (usado ? ' usado' : '');
-            p.draggable = !usado;
-            p.title = usado ? 'Ya está en la hoja' : 'Arrastra a la hoja o haz clic';
-            p.innerHTML = '<span class="ico"></span><span></span>';
-            p.firstChild.textContent = t.icono;
-            p.lastChild.textContent = t.nombre;
-            if (!usado) {
-                p.addEventListener('dragstart', (e) => {
-                    arrastre = { nuevo: tipo };
-                    e.dataTransfer.effectAllowed = 'copy';
-                    e.dataTransfer.setData('text/plain', tipo);
-                });
-                p.addEventListener('dragend', terminarArrastre);
-                p.addEventListener('click', () => {
-                    // se agrega debajo del seleccionado, o al final
-                    const i = bloques().findIndex((b) => b.id === sel);
-                    arrastre = { nuevo: tipo };
-                    soltar(i >= 0 ? i + 1 : bloques().length);
-                    arrastre = null;
-                });
-            }
-            cont.appendChild(p);
-        });
-    }
-
-    // ---------- panel de propiedades ----------
-
-    function pestana(nombre) {
-        document.querySelectorAll('.ed-tabs button').forEach((b) => b.classList.toggle('activo', b.dataset.tab === nombre));
-        ['bloque', 'empresa', 'estilo'].forEach((t) => { $('#tab-' + t).hidden = t !== nombre; });
-    }
-    document.querySelectorAll('.ed-tabs button').forEach((b) => b.addEventListener('click', () => pestana(b.dataset.tab)));
-
-    function el(tag, props = {}, ...hijos) {
-        const e = document.createElement(tag);
-        Object.assign(e, props);
-        hijos.forEach((h) => h != null && e.append(h));
-        return e;
-    }
-
-    /** Crea el control para obj[clave] y lo engancha al historial. */
-    function control(obj, clave, etiqueta, tipo, op = {}, idFusion = '') {
-        const fus = idFusion + '.' + clave;
-        const poner = (v, fusionar) => { obj[clave] = v; cambio(fusionar ? fus : null); };
-        const campo = el('div', { className: 'campo' });
-
-        switch (tipo) {
-            case 'check': {
-                campo.classList.add('check');
-                const cb = el('input', { type: 'checkbox', checked: obj[clave] === true });
-                cb.addEventListener('change', () => poner(cb.checked));
-                campo.append(el('label', {}, cb, etiqueta));
-                return campo;
-            }
-            case 'area':
-            case 'texto': {
-                const inp = tipo === 'area' ? el('textarea', { rows: 5 }) : el('input');
-                inp.value = obj[clave] ?? '';
-                inp.addEventListener('input', () => poner(inp.value, true));
-                campo.append(el('label', { textContent: etiqueta }), inp);
-                if (op.vineta) {
-                    const b = el('button', { type: 'button', className: 'btn chico', textContent: 'Insertar •', style: 'margin-top:6px' });
-                    b.addEventListener('click', () => {
-                        const i = inp.selectionStart ?? inp.value.length;
-                        inp.value = inp.value.slice(0, i) + '  •  ' + inp.value.slice(inp.selectionEnd ?? i);
-                        poner(inp.value);
-                        inp.focus();
-                    });
-                    campo.append(b);
-                }
-                return campo;
-            }
-            case 'numero': {
-                const inp = el('input', { type: 'number', min: op.min, max: op.max, step: op.step, className: 'num' });
-                inp.value = obj[clave] ?? '';
-                inp.addEventListener('input', () => {
-                    const n = Number(inp.value);
-                    if (inp.value !== '' && Number.isFinite(n)) poner(n, true);
-                });
-                campo.append(el('label', { textContent: etiqueta }), inp);
-                return campo;
-            }
-            case 'alinear': {
-                const seg = el('div', { className: 'segmento' });
-                [['izquierda', '⯇ Izq.'], ['centro', 'Centro'], ['derecha', 'Der. ⯈']].forEach(([v, t]) => {
-                    const b = el('button', { type: 'button', textContent: t });
-                    b.classList.toggle('activo', (obj[clave] || 'izquierda') === v);
-                    b.addEventListener('click', () => { poner(v); pintarPanel(); });
-                    seg.append(b);
-                });
-                campo.append(el('label', { textContent: etiqueta }), seg);
-                return campo;
-            }
-            case 'color': {
-                const est = new Estilo(datos.diseno.estilo);
-                const fila = el('div', { className: 'muestras' });
-                COLORES.forEach(([v, t]) => {
-                    const b = el('button', { type: 'button', className: 'muestra-color', title: t });
-                    b.style.background = est.color(v);
-                    b.classList.toggle('activo', (obj[clave] || 'texto') === v);
-                    b.addEventListener('click', () => { poner(v); pintarPanel(); });
-                    fila.append(b);
-                });
-                campo.append(el('label', { textContent: etiqueta }), fila);
-                return campo;
-            }
-            case 'imagen': {
-                campo.append(el('label', { textContent: etiqueta }));
-                if (obj[clave]) campo.append(el('img', { src: obj[clave], className: 'img-prev', alt: '' }));
-                const archivo = el('input', { type: 'file', accept: 'image/*', hidden: true });
-                const elegir = el('button', { type: 'button', className: 'btn chico', textContent: obj[clave] ? 'Cambiar imagen…' : 'Elegir imagen…' });
-                elegir.addEventListener('click', () => archivo.click());
-                archivo.addEventListener('change', async () => {
-                    if (!archivo.files[0]) return;
-                    try {
-                        poner(await leerImagen(archivo.files[0]));
-                        pintarPanel();
-                    } catch (e) {
-                        aviso(e.message, true);
-                    }
-                });
-                const botones = el('div', { className: 'botones-img' }, elegir, archivo);
-                if (obj[clave]) {
-                    const quitar = el('button', { type: 'button', className: 'btn chico peligro', textContent: 'Quitar' });
-                    quitar.addEventListener('click', () => { obj[clave] = null; cambio(); pintarPanel(); });
-                    botones.append(quitar);
-                }
-                campo.append(botones);
-                return campo;
-            }
+        const el = e.target.closest?.('[data-accion]');
+        if (!el) return;
+        e.stopPropagation();
+        const [accion, seccion] = el.dataset.accion.split(':');
+        if (accion === 'logo') {
+            $('#archivoLogo').click();
+            return;
         }
-        return campo;
+        if (accion === 'quitar-logo') datos.empresa.logo = null;
+        if (accion === 'agregar') datos.diseno[seccion].activo = true;
+        if (accion === 'quitar') datos.diseno[seccion].activo = false;
+        cambio();
+        pintarHoja();
+    });
+
+    // ---------- logo ----------
+
+    async function ponerLogo(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            aviso('Elige un archivo de imagen (PNG o JPG).', true);
+            return;
+        }
+        try {
+            datos.empresa.logo = await leerImagen(file);
+            cambio();
+            pintarHoja();
+        } catch (e) {
+            aviso(e.message, true);
+        }
     }
+
+    $('#archivoLogo').addEventListener('change', (e) => {
+        ponerLogo(e.target.files[0]);
+        e.target.value = '';
+    });
+
+    const zonaLogo = () => raiz.querySelector('.subir-logo, .logo-caja');
+    const hayArchivos = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
+    $('#lienzo').addEventListener('dragover', (e) => {
+        if (!hayArchivos(e)) return;
+        e.preventDefault();
+        zonaLogo()?.classList.add('encima');
+    });
+    $('#lienzo').addEventListener('dragleave', (e) => {
+        if (!$('#lienzo').contains(e.relatedTarget)) zonaLogo()?.classList.remove('encima');
+    });
+    $('#lienzo').addEventListener('drop', (e) => {
+        if (!hayArchivos(e)) return;
+        e.preventDefault();
+        zonaLogo()?.classList.remove('encima');
+        ponerLogo(e.dataTransfer.files[0]);
+    });
 
     /** Lee una imagen, la reduce a máximo 800 px y la devuelve como data URI (PNG o JPG). */
     function leerImagen(file) {
@@ -525,142 +306,136 @@
         });
     }
 
-    function pintarPanel() {
-        const cont = $('#tab-bloque');
-        cont.innerHTML = '';
-        const b = sel && bloque(sel);
-        if (!b) {
-            cont.append(el('p', { className: 'tenue', textContent: 'Haz clic en un bloque de la hoja para editarlo.' }));
-            cont.append(el('p', { className: 'tenue', textContent: 'Tip: arrastra los bloques para cambiar el orden; Supr borra el seleccionado.' }));
-            return;
-        }
-        const tipo = tipoDe(sel);
-        const t = TIPOS[tipo] || { nombre: tipo, campos: [] };
-        cont.append(el('h3', { className: 'ed-titulo-bloque', textContent: t.nombre }));
+    // ---------- barra: color, papel y opciones ----------
 
-        if (!t.fijo) {
-            const i = bloques().findIndex((x) => x.id === sel);
-            const acc = el('div', { className: 'ed-acc-bloque' });
-            const boton = (texto, titulo, fn, deshabilitado, clase = '') => {
-                const bt = el('button', { type: 'button', className: 'btn chico ' + clase, textContent: texto, title: titulo, disabled: deshabilitado });
-                bt.addEventListener('click', fn);
-                acc.append(bt);
-            };
-            boton('↑ Subir', 'Mover arriba', () => mover(i, -1), i === 0);
-            boton('↓ Bajar', 'Mover abajo', () => mover(i, 1), i === bloques().length - 1);
-            boton('Duplicar', 'Duplicar bloque', duplicar, !!t.unico);
-            boton('Eliminar', 'Eliminar bloque (Supr)', eliminar, false, 'peligro');
-            cont.append(acc);
-        }
-        if (t.nota) cont.append(el('div', { className: 'nota', textContent: t.nota }));
-        t.campos.forEach(([k, etq, tc, op]) => cont.append(control(b, k, etq, tc, op, sel)));
+    function el(tag, props = {}, ...hijos) {
+        const e = document.createElement(tag);
+        Object.assign(e, props);
+        hijos.forEach((h) => h != null && e.append(h));
+        return e;
     }
 
-    function mover(i, d) {
-        const lista = bloques();
-        const j = i + d;
-        if (j < 0 || j >= lista.length) return;
-        [lista[i], lista[j]] = [lista[j], lista[i]];
-        cambio();
-        pintarPanel();
+    function cerrarMenus(excepto) {
+        document.querySelectorAll('.ed-menu').forEach((m) => { if (m !== excepto) m.hidden = true; });
     }
 
-    function duplicar() {
-        const lista = bloques();
-        const i = lista.findIndex((x) => x.id === sel);
-        const copia = { ...structuredClone(lista[i]), id: nuevoId() };
-        lista.splice(i + 1, 0, copia);
-        sel = copia.id;
-        cambio();
-        pintarPanel();
+    function alternarMenu(menu) {
+        const abrir = menu.hidden;
+        cerrarMenus();
+        menu.hidden = !abrir;
     }
 
-    function eliminar() {
-        const lista = bloques();
-        const i = lista.findIndex((x) => x.id === sel);
-        if (i < 0) return;
-        lista.splice(i, 1);
-        sel = null;
-        cambio();
-        pintarPaleta();
-        pintarPanel();
-        aviso('Bloque eliminado (Ctrl+Z para deshacer)');
-    }
+    $('#btnColor').addEventListener('click', (e) => { e.stopPropagation(); alternarMenu($('#menuColor')); });
+    $('#btnOpciones').addEventListener('click', (e) => { e.stopPropagation(); alternarMenu($('#menuOpciones')); });
+    document.querySelectorAll('.ed-menu').forEach((m) => m.addEventListener('click', (e) => e.stopPropagation()));
+    document.addEventListener('click', () => cerrarMenus());
 
-    function pintarEmpresa() {
-        const cont = $('#tab-empresa');
-        cont.innerHTML = '';
-        cont.append(el('div', { className: 'nota', textContent: 'Aparecen en el encabezado y en "Datos del proveedor". Lo que dejes vacío no se imprime.' }));
-        CAMPOS_EMPRESA.forEach(([k, etq]) => cont.append(control(datos.empresa, k, etq, 'texto', {}, 'empresa')));
-        cont.append(control(datos.empresa, 'logo', 'Logo', 'imagen'));
-        const img = $('#tab-empresa .campo:last-child');
-        img.append(el('p', { className: 'tenue', textContent: 'PNG con fondo transparente se ve mejor sobre el color del encabezado.' }));
-    }
+    function pintarBarra() {
+        const d = datos.diseno;
+        $('#puntoColor').style.background = `linear-gradient(135deg, ${d.colores.primario} 50%, ${d.colores.acento} 50%)`;
+        document.querySelectorAll('#papel button').forEach((b) => b.classList.toggle('activo', b.dataset.papel === d.papel));
 
-    function pintarEstilo() {
-        const cont = $('#tab-estilo');
-        const est = datos.diseno.estilo;
-        cont.innerHTML = '';
-
-        cont.append(el('label', { textContent: 'Combinaciones rápidas' }));
-        const pal = el('div', { className: 'paletas' });
-        PALETAS.forEach(([nombre, p, a]) => {
-            const b = el('button', { type: 'button', className: 'paleta-btn' },
-                el('span', { className: 'c', style: 'background:' + p }), el('span', { className: 'c', style: 'background:' + a }), nombre);
-            b.addEventListener('click', () => { est.primario = p; est.acento = a; cambio(); pintarEstilo(); });
-            pal.append(b);
+        // colores
+        const menu = $('#menuColor');
+        menu.innerHTML = '';
+        menu.append(el('div', { className: 'ed-menu-titulo', textContent: 'Combinaciones' }));
+        const vistos = new Set();
+        const pares = el('div', { className: 'pares' });
+        EJEMPLOS.forEach((ej) => {
+            const clave = ej.colores.primario + ej.colores.acento;
+            if (vistos.has(clave)) return;
+            vistos.add(clave);
+            const b = el('button', { type: 'button', className: 'par', title: ej.nombre });
+            b.style.background = `linear-gradient(135deg, ${ej.colores.primario} 50%, ${ej.colores.acento} 50%)`;
+            b.classList.toggle('activo', d.colores.primario === ej.colores.primario && d.colores.acento === ej.colores.acento);
+            b.addEventListener('click', () => { d.colores = { ...ej.colores }; cambio(); pintarBarra(); pintarHoja(); });
+            pares.append(b);
         });
-        cont.append(pal);
-
-        const color = (k, etq, def) => {
-            const campo = el('div', { className: 'campo' });
-            const picker = el('input', { type: 'color', value: est[k] || def });
-            const hex = el('input', { value: (est[k] || def).toUpperCase(), maxLength: 7 });
-            picker.addEventListener('input', () => { est[k] = picker.value.toUpperCase(); hex.value = est[k]; cambio('estilo.' + k); });
-            hex.addEventListener('input', () => {
-                if (/^#[0-9a-f]{6}$/i.test(hex.value)) { est[k] = hex.value.toUpperCase(); picker.value = hex.value; cambio('estilo.' + k); }
+        menu.append(pares);
+        menu.append(el('div', { className: 'ed-menu-titulo', textContent: 'Personalizado' }));
+        [['primario', 'Principal'], ['acento', 'Acento']].forEach(([k, etq]) => {
+            const picker = el('input', { type: 'color', value: d.colores[k] });
+            let timer;
+            picker.addEventListener('input', () => {
+                d.colores[k] = picker.value.toUpperCase();
+                cambio('color.' + k);
+                $('#puntoColor').style.background = `linear-gradient(135deg, ${d.colores.primario} 50%, ${d.colores.acento} 50%)`;
+                clearTimeout(timer);
+                timer = setTimeout(pintarHoja, 150);
             });
-            campo.append(el('label', { textContent: etq }), el('div', { className: 'color-fila' }, picker, hex));
-            return campo;
-        };
-        cont.append(el('div', { style: 'height:14px' }));
-        cont.append(color('primario', 'Color principal (encabezado, tabla)', '#243B53'));
-        cont.append(color('acento', 'Color de acento (título, total)', '#3E7CB1'));
-        cont.append(color('texto', 'Color del texto', '#2B3A40'));
+            menu.append(el('label', { className: 'color-fila' }, picker, etq));
+        });
 
-        const fuente = el('div', { className: 'campo' });
-        const sf = el('select');
-        [['Exo2', 'Exo 2 (moderna)'], ['Liberation', 'Liberation Sans (clásica)']].forEach(([v, t]) => sf.append(el('option', { value: v, textContent: t })));
-        sf.value = est.fuenteMarca || 'Exo2';
-        sf.addEventListener('change', () => { est.fuenteMarca = sf.value; cambio(); });
-        fuente.append(el('label', { textContent: 'Letra del nombre de la empresa' }), sf);
-        cont.append(fuente);
-
-        cont.append(control(est, 'tamano', 'Tamaño de letra general (pt)', 'numero', { min: 7, max: 12, step: 0.5 }, 'estilo'));
+        // opciones
+        const op = $('#menuOpciones');
+        op.innerHTML = '';
+        OPCIONES.forEach(([k, etq]) => {
+            const cb = el('input', { type: 'checkbox', checked: d[k] === true });
+            cb.addEventListener('change', () => { d[k] = cb.checked; cambio(); pintarHoja(); });
+            op.append(el('label', { className: 'opcion' }, cb, etq));
+        });
     }
 
-    /** Mismo cálculo de colores que Estilo.java, para las muestras del panel. */
-    function Estilo(e) {
-        const p = e.primario || '#243B53', a = e.acento || '#3E7CB1', t = e.texto || '#2B3A40';
-        this.color = (n) => ({ primario: p, acento: a, gris: '#7A8A90' }[n] || t);
-    }
-
-    function pintarTodo() {
-        pintarPaleta();
-        pintarPanel();
-        pintarEmpresa();
-        pintarEstilo();
+    document.querySelectorAll('#papel button').forEach((b) => b.addEventListener('click', () => {
+        datos.diseno.papel = b.dataset.papel;
+        cambio();
+        pintarBarra();
         pintarHoja();
+    }));
+
+    // ---------- galería de plantillas ----------
+
+    async function abrirGaleria() {
+        const lista = $('#galeriaLista');
+        lista.innerHTML = '';
+        $('#galeria').hidden = false;
+        const d = datos.diseno;
+        EJEMPLOS.forEach((ej) => {
+            const actual = d.plantilla === ej.plantilla && d.colores.primario === ej.colores.primario && d.colores.acento === ej.colores.acento;
+            const mini = el('div', { className: 'mini' });
+            const tarjeta = el('button', { type: 'button', className: 'tarjeta-plantilla' + (actual ? ' actual' : '') },
+                el('div', { className: 'mini-marco' }, mini),
+                el('b', { textContent: ej.nombre + (actual ? ' · actual' : '') }),
+                el('span', { className: 'tenue', textContent: ej.descripcion }));
+            tarjeta.addEventListener('click', () => {
+                d.plantilla = ej.plantilla;
+                d.colores = { ...ej.colores };
+                cambio();
+                cerrarGaleria();
+                pintarBarra();
+                pintarHoja();
+            });
+            lista.append(tarjeta);
+            const sombra = mini.attachShadow({ mode: 'open' });
+            vista({ ...d, plantilla: ej.plantilla, colores: ej.colores }, false)
+                .then((nodos) => sombra.replaceChildren(...nodos))
+                .catch(() => sombra.replaceChildren(el('p', { textContent: 'Sin vista previa' })));
+        });
     }
 
-    // ---------- barra de acciones ----------
+    function cerrarGaleria() {
+        $('#galeria').hidden = true;
+    }
+
+    $('#btnPlantillas').addEventListener('click', abrirGaleria);
+    $('#cerrarGaleria').addEventListener('click', cerrarGaleria);
+    $('#galeria').addEventListener('click', (e) => { if (e.target === e.currentTarget) cerrarGaleria(); });
+    $('#restablecer').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!confirm('¿Regresar todos los textos, colores y secciones a la plantilla genérica?\nTus datos de empresa y logo se conservan. Puedes deshacerlo con Ctrl+Z.')) return;
+        datos.diseno = structuredClone(GENERICO);
+        cambio();
+        cerrarGaleria();
+        pintarBarra();
+        pintarHoja();
+    });
+
+    // ---------- guardar, PDF y teclado ----------
 
     async function guardar() {
         const enviado = historial[pos];
         try {
-            const r = await fetch(URL_PLANTILLA, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: enviado,
-            });
+            const r = await postJson(URL_PLANTILLA, enviado);
             if (!r.ok) {
                 const j = await r.json().catch(() => ({}));
                 throw new Error(j.error || 'El servidor respondió ' + r.status);
@@ -681,33 +456,29 @@
         f.datos.value = JSON.stringify(datos);
         f.submit();
     });
-    $('#generico').addEventListener('click', () => {
-        if (!confirm('¿Reemplazar el diseño por la plantilla genérica?\nTus datos de empresa y logo se conservan. Puedes deshacerlo con Ctrl+Z.')) return;
-        datos.diseno = structuredClone(GENERICO);
-        sel = null;
-        cambio();
-        pintarTodo();
-    });
 
-    const escribiendo = () => /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
+    const editando = () => {
+        const a = document.activeElement;
+        return /^(INPUT|TEXTAREA|SELECT)$/.test(a?.tagName) || (a === host && raiz.activeElement);
+    };
     document.addEventListener('keydown', (e) => {
         const ctrl = e.ctrlKey || e.metaKey;
-        if (ctrl && e.key.toLowerCase() === 's') {
+        const tecla = e.key.toLowerCase();
+        if (ctrl && tecla === 's') {
             e.preventDefault();
+            raiz.activeElement?.blur();
             if (!$('#guardar').disabled) guardar();
-        } else if (escribiendo()) {
-            // en los campos de texto, Ctrl+Z y Supr son los del navegador
-        } else if (ctrl && e.key.toLowerCase() === 'z') {
+        } else if (e.key === 'Escape') {
+            cerrarGaleria();
+            cerrarMenus();
+        } else if (editando()) {
+            // dentro de un texto, Ctrl+Z es el del navegador
+        } else if (ctrl && tecla === 'z') {
             e.preventDefault();
             irA(e.shiftKey ? pos + 1 : pos - 1);
-        } else if (ctrl && e.key.toLowerCase() === 'y') {
+        } else if (ctrl && tecla === 'y') {
             e.preventDefault();
             irA(pos + 1);
-        } else if ((e.key === 'Delete' || e.key === 'Backspace') && sel && sel !== 'pie') {
-            e.preventDefault();
-            eliminar();
-        } else if (e.key === 'Escape') {
-            seleccionar(null);
         }
     });
 
@@ -716,8 +487,8 @@
     });
     window.addEventListener('resize', ajustarZoom);
 
-    ajustarZoom();
     estado();
     $('#estado').textContent = 'Sin cambios';
-    pintarTodo();
+    pintarBarra();
+    pintarHoja();
 })();

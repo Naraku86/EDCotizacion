@@ -26,19 +26,39 @@ Todo vive en `~/EDCotizacion/`:
 |---|---|
 | `cotizaciones.db` | Base de datos (SQLite): cotizaciones, configuración, datos de tu empresa, logo y diseño del PDF. **Para respaldar, copia este archivo.** |
 
+## Entrar
+
+La primera vez el usuario es **admin** y la contraseña **admin**. Mientras no los cambies, la app
+muestra un aviso; se cambian en **Cuenta** (tu nombre de usuario, arriba a la derecha).
+
 ## Plantilla del PDF
 
-**Configuración › Editar plantilla** abre un editor visual:
+**Configuración › Editar plantilla** muestra la hoja tal como saldrá el PDF y se edita encima:
 
-- A la izquierda, los bloques (encabezado, proveedor/cliente, tabla, totales, condiciones, título,
-  párrafo, imagen, firma, línea, espacio, salto de página). Se arrastran a la hoja o se agregan con clic.
-- En la hoja, los bloques se arrastran para cambiar el orden; con clic se editan en el panel derecho.
-- Pestañas **Empresa** (nombre, RFC, teléfono, logo…; lo vacío no se imprime) y **Colores**.
-- Vista previa en vivo, *Ver PDF* sin guardar, deshacer/rehacer (Ctrl+Z / Ctrl+Y), Ctrl+S para guardar.
-- *Volver a la genérica* carga el diseño neutro que trae la app (`src/main/resources/pdf/diseno-generico.json`).
+- Clic en cualquier texto (nombre, RFC, títulos, encabezados de la tabla, pie…) para cambiarlo.
+  Lo que dejes vacío no se imprime.
+- El logo se sube o se suelta en el recuadro punteado del encabezado.
+- **Plantillas**: galería con ejemplos (Clásica, Minimalista, Moderna, Compacta y variantes de color),
+  mostrados con tus datos.
+- **Color**, **Carta / A4** y **Opciones** (nombre en mayúsculas, columna #, número de página…).
+- Secciones opcionales: *+ Datos bancarios*, *+ Nota*, *+ Línea de firma*.
+- *Ver PDF* sin guardar, deshacer/rehacer (Ctrl+Z / Ctrl+Y) y Ctrl+S para guardar.
 
 El diseño se guarda como JSON en la tabla `config` (`plantilla.diseno`) y los datos de la empresa como
-`empresa.*`. El HTML que lo dibuja es `src/main/resources/templates/pdf/cotizacion.html`.
+`empresa.*`. El HTML del PDF está en `src/main/resources/templates/pdf/cotizacion.html`; los ejemplos
+de la galería en `src/main/resources/pdf/ejemplos.json`.
+
+## Varias instalaciones en la misma PC
+
+Cada carpeta de datos es una instalación independiente (base, empresa, plantilla y usuarios):
+
+```bash
+./iniciar.sh ~/EDCotizacion 8090          # tu empresa
+./iniciar.sh ~/EDCotizacion-demo 8091     # otra, p. ej. para probar la versión genérica
+```
+
+En Windows: `iniciar.bat C:\ruta\datos 8091`. La sesión de cada puerto es independiente.
+La carpeta `local/` está en `.gitignore` para guardar ahí scripts propios que no se publican.
 
 Para usar otra carpeta: `java -Dapp.home=/ruta/datos -jar target/edcotizacion.jar`.
 Otro puerto: `--server.port=9000`. Sin abrir el navegador: `--app.abrir-navegador=false`.
@@ -66,6 +86,7 @@ src/main/java/com/edcotizacion/
 ├── producto/     Alta automática, último costo/precio y autocompletado
 ├── pdf/          Diseño (bloques) + datos de empresa → HTML (Thymeleaf) → PDF
 ├── config/       Valores por defecto y folio consecutivo
+├── seguridad/    Login (Spring Security) y usuarios
 └── web/          Controladores (pantallas y API JSON del formulario)
 src/main/resources/
 ├── templates/          Pantallas de la app
@@ -74,3 +95,7 @@ src/main/resources/
 ├── pdf/                Diseño genérico por defecto
 └── db/migration/       Esquema de la base (Flyway)
 ```
+
+## Licencia
+
+[MIT](LICENSE).

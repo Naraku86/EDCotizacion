@@ -1,45 +1,57 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
-<head th:replace="~{fragmentos :: head('Editor de plantilla')}"></head>
+<head th:replace="~{fragmentos :: head('Plantilla del PDF')}"></head>
 <body class="editor-pagina">
 <header th:replace="~{fragmentos :: barra('config')}"></header>
 
 <div class="ed-barra">
     <a class="btn chico" th:href="@{/configuracion}">← Configuración</a>
-    <h1>Plantilla del PDF</h1>
+    <div class="ed-herramientas">
+        <button id="btnPlantillas" class="btn">▦ Plantillas</button>
+        <div class="ed-menu-cont">
+            <button id="btnColor" class="btn"><span id="puntoColor" class="punto"></span> Color ▾</button>
+            <div id="menuColor" class="ed-menu" hidden></div>
+        </div>
+        <div id="papel" class="segmento">
+            <button type="button" data-papel="carta">Carta</button>
+            <button type="button" data-papel="a4">A4</button>
+        </div>
+        <div class="ed-menu-cont">
+            <button id="btnOpciones" class="btn">⚙ Opciones ▾</button>
+            <div id="menuOpciones" class="ed-menu" hidden></div>
+        </div>
+    </div>
     <span id="estado" class="tenue">Sin cambios</span>
     <div class="ed-acciones">
-        <button id="deshacer" class="btn" title="Deshacer (Ctrl+Z)" disabled>↶ Deshacer</button>
+        <button id="deshacer" class="btn" title="Deshacer (Ctrl+Z)" disabled>↶</button>
         <button id="rehacer" class="btn" title="Rehacer (Ctrl+Y)" disabled>↷</button>
-        <button id="generico" class="btn peligro" title="Reemplaza el diseño por el genérico (tus datos de empresa se conservan)">Volver a la genérica</button>
         <button id="verPdf" class="btn oscuro">Ver PDF</button>
         <button id="guardar" class="btn primario" title="Guardar (Ctrl+S)" disabled>Guardar</button>
     </div>
 </div>
 
-<div class="editor">
-    <aside class="ed-paleta">
-        <h2>Bloques</h2>
-        <p class="tenue">Arrástralos a la hoja o haz clic para agregarlos. En la hoja, arrástralos para cambiar el orden.</p>
-        <div id="paleta"></div>
-    </aside>
+<section id="lienzo" class="ed-lienzo">
+    <p class="ed-ayuda">Haz clic en cualquier texto de la hoja para cambiarlo. Lo que dejes vacío no sale en el PDF.
+        Los productos, el cliente y los totales son de ejemplo: salen de cada cotización.</p>
+    <div id="hoja-host"></div>
+</section>
 
-    <section id="lienzo" class="ed-lienzo">
-        <div id="hoja-host"></div>
-    </section>
-
-    <aside class="ed-panel">
-        <nav class="ed-tabs">
-            <button data-tab="bloque" class="activo">Bloque</button>
-            <button data-tab="empresa">Empresa</button>
-            <button data-tab="estilo">Colores</button>
-        </nav>
-        <div id="tab-bloque" class="ed-tab"></div>
-        <div id="tab-empresa" class="ed-tab" hidden></div>
-        <div id="tab-estilo" class="ed-tab" hidden></div>
-    </aside>
+<div id="galeria" class="ed-modal" hidden>
+    <div class="ed-modal-caja">
+        <div class="ed-modal-titulo">
+            <h2>Elige una plantilla</h2>
+            <button id="cerrarGaleria" class="btn chico" title="Cerrar (Esc)">✕</button>
+        </div>
+        <p class="tenue">Se muestran con tus datos. Al elegir una conservas tus textos; cambian el diseño y los colores.</p>
+        <div id="galeriaLista" class="galeria"></div>
+        <p class="tenue galeria-pie">
+            ¿Quieres empezar de cero? <a href="#" id="restablecer">Restablecer todos los textos a la plantilla genérica</a>
+            (tus datos de empresa y logo se conservan).
+        </p>
+    </div>
 </div>
 
+<input id="archivoLogo" type="file" accept="image/*" hidden>
 <form id="formPdf" method="post" th:action="@{/configuracion/plantilla/muestra.pdf}" target="_blank" hidden>
     <input type="hidden" name="datos">
 </form>
@@ -47,6 +59,7 @@
 <script th:inline="javascript">
     const PLANTILLA = JSON.parse(/*[[${datosJson}]]*/ '{}');
     const GENERICO = JSON.parse(/*[[${genericoJson}]]*/ '{}');
+    const EJEMPLOS = JSON.parse(/*[[${ejemplosJson}]]*/ '[]');
 </script>
 <script th:src="@{/plantilla.js}"></script>
 </body>

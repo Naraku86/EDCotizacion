@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragmentos :: head('Entrar')}"></head>
+<body class="pagina-login">
+<form class="tarjeta login" method="post" th:action="@{/login}">
+    <div class="logo-login"><th:block th:text="${marca.nombreParte(0)}">MI</th:block> <span th:text="${marca.nombreParte(1)}">EMPRESA</span></div>
+    <p class="tenue">Cotizaciones</p>
+
+    <div class="aviso error" th:if="${param.error}">Usuario o contraseña incorrectos.</div>
+    <div class="aviso ok" th:if="${param.salio}">Cerraste sesión.</div>
+    <div class="aviso ok" th:if="${param.cambio}">Datos cambiados. Entra con tu nuevo usuario y contraseña.</div>
+
+    <label for="username">Usuario</label>
+    <input id="username" name="username" autocomplete="username" autofocus required>
+    <label for="password">Contraseña</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button class="btn primario">Entrar</button>
+    <p class="tenue" th:if="${passwordDefault}">Primera vez: usuario <b>admin</b>, contraseña <b>admin</b>.</p>
+</form>
+</body>
+</html>

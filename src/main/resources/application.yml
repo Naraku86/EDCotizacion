@@ -5,6 +5,12 @@ app:
 
 server:
   port: 8090
+  servlet:
+    session:
+      timeout: 12h
+      cookie:
+        # Nombre distinto por puerto: así dos instancias en la misma PC no se cierran la sesión entre sí
+        name: EDCOT${server.port}
 
 spring:
   application:

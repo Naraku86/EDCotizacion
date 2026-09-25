@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
-  PDF de la cotización. No se edita a mano: el orden de los bloques, sus textos y los
-  colores vienen del editor (Configuración > Editar plantilla).
-    ${d}  diseño: estilo, pie y bloques (Map del JSON guardado)
-    ${e}  datos de la empresa · ${s} colores/medidas validados · ${c} cotización · ${f} formato
-  El mismo HTML se muestra en el editor: cada bloque va en <div class="blq" data-bloque>.
+  PDF de la cotización. Las cuatro plantillas (clásica, minimalista, moderna, compacta) comparten
+  este HTML; cambia el CSS según la clase p-<plantilla>.
+    ${d}  Diseno (plantilla, colores, textos, secciones) · ${e} Empresa · ${s} Estilo (colores validados)
+    ${c}  cotización · ${f} formato · ${ed} true cuando se muestra en el editor
+  data-editar="ruta" marca lo que se edita haciendo clic en la hoja; data-accion, los botones del editor.
   Debe quedar como XHTML válido (etiquetas cerradas) para OpenHTMLtoPDF.
 -->
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
@@ -13,194 +13,293 @@
 <title th:text="${c.folio}">COT-0001</title>
 <style th:inline="css">
     @page {
-        size: letter;
-        margin: 60pt 46pt 48pt 46pt;
+        size: [(${d.papel == 'a4' ? 'A4' : 'letter'})];
+        margin: 50pt 42pt 48pt 42pt;
         @bottom-center { content: element(pie); }
     }
     body { margin: 0; }
 
-    .hoja { font-family: 'Liberation', sans-serif; font-size: [(${s.tamano})]pt; color: [(${s.texto})]; }
+    /* ---------- común ---------- */
+    .hoja { font-family: 'Liberation', sans-serif; font-size: 8.5pt; color: #2B3A40; }
     .hoja table { border-collapse: collapse; width: 100%; }
     .hoja td, .hoja th { vertical-align: top; }
-    .hoja h2 { font-size: 12pt; color: [(${s.primario})]; font-weight: normal; margin: 10pt 0 8pt 0; }
-
-    .blq-encabezado, .blq-partes, .blq-totales, .blq-condiciones, .blq-firma,
-    .blq-texto, .blq-titulo, .blq-imagen { page-break-inside: avoid; }
-    .blq-salto { page-break-before: always; }
-    .solo-editor { display: none; }
-
-    /* Encabezado */
-    .encabezado td { height: 80pt; }
-    .marca { background: [(${s.primario})]; width: 64%; padding: 12pt 7pt; }
-    .marca .logo { max-height: 48pt; max-width: 200pt; margin-bottom: 6pt; }
-    .marca .nombre { font-family: '[(${s.fuenteMarca})]', sans-serif; font-weight: bold; font-size: 26pt; color: #FFFFFF; line-height: 1; }
-    .marca .nombre span { color: [(${s.acento})]; }
+    .hoja h2 { font-size: 12pt; font-weight: normal; color: [(${s.primario})]; margin: 14pt 0 8pt 0; }
+    .hoja h3, .hoja h4 { margin: 0; }
     .mayus { text-transform: uppercase; }
-    .marca .lema { color: [(${s.sobrePrimario})]; font-size: 9.5pt; margin-top: 8pt; }
-    .titulo { background: [(${s.acento})]; color: #FFFFFF; text-align: right; padding: 8pt 7pt; }
-    .titulo .cot { font-size: 20.5pt; line-height: 1; margin-bottom: 18pt; }
-    .titulo .dato { font-size: 8.5pt; line-height: 1.35; }
-
-    /* Proveedor / Cliente */
-    .partes { margin-top: 14pt; border: 0.75pt solid [(${s.borde})]; }
-    .partes td { background: [(${s.fondo})]; width: 50%; padding: 7pt 7pt 3pt 7pt; line-height: 1.4; }
-    .partes td + td { border-left: 0.75pt solid [(${s.borde})]; }
-    .partes h3 { font-size: 9.5pt; color: [(${s.primario})]; margin: 0 0 12pt 0; font-weight: bold; }
-
-    /* Detalle */
-    .detalle { width: 94%; margin: 0 auto; -fs-table-paginate: paginate; }
-    .detalle tr { page-break-inside: avoid; }
-    .detalle th { background: [(${s.primario})]; color: #FFFFFF; font-weight: normal; font-size: 8.5pt;
-                  padding: 4pt 6pt; text-align: center; border-bottom: 1.5pt solid [(${s.borde})]; }
-    .detalle td { padding: 5pt 6pt 8pt 6pt; border-bottom: 0.75pt solid [(${s.raya})]; font-size: 8pt; }
+    .nombre { font-family: '[(${s.fuenteMarca})]', sans-serif; font-weight: bold; line-height: 1.05; }
+    .logo-caja { margin-bottom: 6pt; }
+    .logo { max-height: 50pt; max-width: 190pt; }
+    .lema, .extra-texto, .pie, .dir { white-space: pre-wrap; }
+    .cot { line-height: 1; }
+    .detalle { -fs-table-paginate: paginate; }
+    .detalle tr, .totales, .condiciones, .extras, .firma, .partes, .enc { page-break-inside: avoid; }
     .detalle .n { width: 5%; text-align: center; }
     .detalle .cant { width: 9%; text-align: center; }
-    .detalle .pu { width: 15%; text-align: center; }
-    .detalle .imp { width: 16%; text-align: center; }
-
-    /* Totales */
-    .totales { width: 200pt; margin: 14pt 0 0 auto; }
-    .totales td { background: [(${s.fondo2})]; padding: 5pt 6pt; font-size: 9pt; text-align: right; }
-    .totales td.etq { width: 50%; padding-right: 10pt; }
-    .totales tr.total td { background: [(${s.acento})]; color: #FFFFFF; font-weight: bold; font-size: 9.5pt; padding: 6pt; }
-
-    /* Condiciones */
-    .condiciones td { padding: 5pt 6pt; border-bottom: 0.75pt solid [(${s.borde})]; font-size: 8.5pt; }
-    .condiciones td.etq { background: [(${s.fondo3})]; color: [(${s.primario})]; width: 23%; }
-
-    /* Bloques libres */
-    .parrafo { white-space: pre-wrap; line-height: 1.4; margin: 4pt 0; }
-    .linea { border-top: 1pt solid; margin: 8pt 0; }
-    .firma-caja { display: inline-block; width: 200pt; text-align: center; margin-top: 40pt; }
-    .firma-linea { border-top: 0.75pt solid [(${s.texto})]; margin-bottom: 4pt; }
-    .firma-puesto { color: [(${s.tenue})]; font-size: 8pt; }
-
-    .pie { position: running(pie); text-align: center; color: [(${s.tenue})]; font-size: 7.5pt; font-family: 'Liberation', sans-serif; white-space: pre-wrap; }
+    .detalle .pu { width: 15%; text-align: right; }
+    .detalle .imp { width: 16%; text-align: right; }
+    .totales { width: 210pt; margin: 14pt 0 0 auto; }
+    .condiciones td { padding: 5pt 6pt; }
+    .extras { margin-top: 16pt; }
+    .extras .hueco { width: 12pt; }
+    .entre-partes { width: 0; padding: 0; }
+    .extra { width: 50%; padding: 8pt 10pt; line-height: 1.4; }
+    .extra h4 { font-size: 9pt; margin-bottom: 4pt; }
+    .firma { margin-top: 40pt; text-align: center; }
+    .firma-caja { display: inline-block; width: 210pt; text-align: center; }
+    .firma-linea { border-top: 0.75pt solid #2B3A40; margin-bottom: 4pt; }
+    .firma-puesto { color: #7A8A90; font-size: 8pt; }
+    .pie { position: running(pie); text-align: center; color: #7A8A90; font-size: 7.5pt; font-family: 'Liberation', sans-serif; }
+    .pagina { padding-left: 10pt; }
     .np::after { content: counter(page) " de " counter(pages); }
+    .solo-editor { display: none; }
+
+    /* ---------- clásica ---------- */
+    .p-clasica .enc td { height: 80pt; }
+    .p-clasica .enc-izq { background: [(${s.primario})]; width: 64%; padding: 12pt 8pt; }
+    .p-clasica .nombre { font-size: 26pt; color: #FFFFFF; }
+    .p-clasica .nombre .n2 { color: [(${s.acento})]; }
+    .p-clasica .lema { color: [(${s.sobrePrimario})]; font-size: 9.5pt; margin-top: 8pt; }
+    .p-clasica .enc-der { background: [(${s.acento})]; color: #FFFFFF; text-align: right; padding: 8pt; }
+    .p-clasica .cot { font-size: 20.5pt; margin-bottom: 18pt; }
+    .p-clasica .dato { line-height: 1.35; }
+    .p-clasica .partes { margin-top: 14pt; border: 0.75pt solid [(${s.borde})]; }
+    .p-clasica .parte { background: [(${s.fondo})]; width: 50%; padding: 7pt 7pt 4pt 7pt; line-height: 1.4; }
+    .p-clasica .entre-partes + .parte { border-left: 0.75pt solid [(${s.borde})]; }
+    .p-clasica .parte h3 { font-size: 9.5pt; color: [(${s.primario})]; margin-bottom: 10pt; }
+    .p-clasica .detalle { width: 94%; margin: 0 auto; }
+    .p-clasica .detalle th { background: [(${s.primario})]; color: #FFFFFF; font-weight: normal; padding: 4pt 6pt;
+                             text-align: center; border-bottom: 1.5pt solid [(${s.borde})]; }
+    .p-clasica .detalle td { padding: 5pt 6pt 8pt 6pt; border-bottom: 0.75pt solid [(${s.raya})]; font-size: 8pt; }
+    .p-clasica .detalle .pu, .p-clasica .detalle .imp { text-align: center; }
+    .p-clasica .totales td { background: [(${s.fondo2})]; padding: 5pt 6pt; font-size: 9pt; text-align: right; }
+    .p-clasica .totales td.etq { width: 50%; padding-right: 10pt; }
+    .p-clasica .totales tr.total td { background: [(${s.acento})]; color: #FFFFFF; font-weight: bold; font-size: 9.5pt; padding: 6pt; }
+    .p-clasica .condiciones td { border-bottom: 0.75pt solid [(${s.borde})]; }
+    .p-clasica .condiciones td.etq { background: [(${s.fondo3})]; color: [(${s.primario})]; width: 23%; }
+    .p-clasica .extra { background: [(${s.fondo})]; border: 0.75pt solid [(${s.borde})]; }
+    .p-clasica .extra h4 { color: [(${s.primario})]; }
+
+    /* ---------- minimalista ---------- */
+    .p-minimalista .enc { border-bottom: 1pt solid #D6D9DD; }
+    .p-minimalista .enc td { padding-bottom: 12pt; }
+    .p-minimalista .enc-izq { width: 58%; }
+    .p-minimalista .nombre { font-size: 20pt; color: [(${s.primario})]; }
+    .p-minimalista .nombre .n2 { color: [(${s.acento})]; }
+    .p-minimalista .lema { color: #6B7280; font-size: 9pt; margin-top: 4pt; }
+    .p-minimalista .enc-der { text-align: right; }
+    .p-minimalista .cot { font-size: 22pt; font-weight: bold; color: #111827; letter-spacing: 1pt;
+                          padding-bottom: 5pt; border-bottom: 2.5pt solid [(${s.acento})]; margin-bottom: 8pt; }
+    .p-minimalista .dato { color: #374151; line-height: 1.5; }
+    .p-minimalista .dato b { font-weight: normal; color: #9CA3AF; }
+    .p-minimalista .partes { margin-top: 16pt; }
+    .p-minimalista .parte { width: 50%; line-height: 1.45; }
+    .p-minimalista .entre-partes + .parte { text-align: right; }
+    .p-minimalista .parte h3 { font-size: 7.5pt; letter-spacing: 0.8pt; color: #6B7280; margin-bottom: 5pt; }
+    .p-minimalista .parte .fuerte { font-weight: bold; font-size: 9.5pt; color: #111827; }
+    .p-minimalista h2 { font-size: 10pt; font-weight: bold; color: #111827; margin-top: 18pt; }
+    .p-minimalista .detalle th { background: #F1F2F4; color: #111827; font-size: 7.5pt; font-weight: bold; letter-spacing: 0.5pt;
+                                 padding: 6pt; text-align: left; border-bottom: 1pt solid #9CA3AF; }
+    .p-minimalista .detalle th.cant, .p-minimalista .detalle th.n { text-align: center; }
+    .p-minimalista .detalle th.pu, .p-minimalista .detalle th.imp { text-align: right; }
+    .p-minimalista .detalle td { padding: 6pt; border-bottom: 0.5pt solid #E5E7EB; }
+    .p-minimalista .totales td { padding: 4pt 6pt; text-align: right; font-size: 9pt; }
+    .p-minimalista .totales td.etq { color: #6B7280; }
+    .p-minimalista .totales tr.total td { font-size: 13pt; font-weight: bold; color: #111827;
+                                          border-top: 1.5pt solid [(${s.primario})]; padding-top: 7pt; }
+    .p-minimalista .condiciones td { border-bottom: 0.5pt solid #E5E7EB; padding-left: 0; }
+    .p-minimalista .condiciones td.etq { font-weight: bold; width: 23%; }
+    .p-minimalista .extra { border-top: 1pt solid #D6D9DD; padding-left: 0; padding-right: 0; }
+    .p-minimalista .extra h4 { color: #6B7280; font-size: 7.5pt; letter-spacing: 0.8pt; }
+
+    /* ---------- moderna ---------- */
+    .p-moderna .enc { border-top: 7pt solid [(${s.acento})]; }
+    .p-moderna .enc td { padding-top: 14pt; }
+    .p-moderna .enc-izq { width: 58%; }
+    .p-moderna .nombre { font-size: 22pt; color: [(${s.primario})]; }
+    .p-moderna .nombre .n2 { color: [(${s.acento})]; }
+    .p-moderna .lema { color: #6B7A80; font-size: 9pt; margin-top: 4pt; }
+    .p-moderna .enc-der { text-align: right; }
+    .p-moderna .cot { font-size: 24pt; font-weight: bold; color: [(${s.acento})]; margin-bottom: 8pt; }
+    .p-moderna .dato { line-height: 1.5; color: #4A5A60; }
+    .p-moderna .dato b { color: [(${s.primario})]; }
+    .p-moderna .partes { margin-top: 18pt; }
+    .p-moderna .parte { width: 50%; background: [(${s.fondo})]; border-top: 3pt solid [(${s.acento})]; padding: 8pt 10pt; line-height: 1.45; }
+    .p-moderna .entre-partes { width: 10pt; }
+    .p-moderna .parte h3 { color: [(${s.acento})]; font-size: 8pt; letter-spacing: 0.6pt; margin-bottom: 6pt; }
+    .p-moderna .parte .fuerte { font-weight: bold; color: [(${s.primario})]; }
+    .p-moderna h2 { color: [(${s.primario})]; font-weight: bold; font-size: 11pt; margin-top: 18pt; }
+    .p-moderna .detalle th { background: [(${s.acento})]; color: #FFFFFF; padding: 6pt; font-weight: bold; font-size: 8pt; text-align: left; }
+    .p-moderna .detalle th.cant, .p-moderna .detalle th.n { text-align: center; }
+    .p-moderna .detalle th.pu, .p-moderna .detalle th.imp { text-align: right; }
+    .p-moderna .detalle td { padding: 6pt; }
+    .p-moderna .detalle tbody tr:nth-child(even) td { background: [(${s.fondo})]; }
+    .p-moderna .totales td { padding: 5pt 8pt; text-align: right; font-size: 9pt; }
+    .p-moderna .totales tr.total td { background: [(${s.primario})]; color: #FFFFFF; font-weight: bold; font-size: 11pt; padding: 8pt; }
+    .p-moderna .condiciones td { padding: 5pt 8pt; border-bottom: 0.75pt solid [(${s.fondo3})]; }
+    .p-moderna .condiciones td.etq { color: [(${s.acento})]; font-weight: bold; width: 23%; }
+    .p-moderna .extra { background: [(${s.fondo})]; border-top: 3pt solid [(${s.acento})]; }
+    .p-moderna .extra h4 { color: [(${s.acento})]; }
+
+    /* ---------- compacta ---------- */
+    .p-compacta { font-size: 7.5pt; }
+    .p-compacta .enc { border-bottom: 2pt solid [(${s.primario})]; }
+    .p-compacta .enc td { padding-bottom: 6pt; vertical-align: bottom; }
+    .p-compacta .logo { max-height: 36pt; }
+    .p-compacta .nombre { font-size: 16pt; color: [(${s.primario})]; }
+    .p-compacta .nombre .n2 { color: [(${s.acento})]; }
+    .p-compacta .lema { font-size: 8pt; color: #666666; margin-top: 2pt; }
+    .p-compacta .enc-der { text-align: right; }
+    .p-compacta .cot { font-size: 14pt; font-weight: bold; color: [(${s.primario})]; letter-spacing: 1pt; margin-bottom: 4pt; }
+    .p-compacta .dato { line-height: 1.35; }
+    .p-compacta .partes { margin-top: 8pt; border: 0.5pt solid #BBBBBB; }
+    .p-compacta .parte { width: 50%; padding: 5pt 6pt; line-height: 1.3; }
+    .p-compacta .entre-partes + .parte { border-left: 0.5pt solid #BBBBBB; }
+    .p-compacta .parte h3 { font-size: 7pt; color: [(${s.acento})]; letter-spacing: 0.5pt; margin-bottom: 3pt; }
+    .p-compacta .parte .fuerte { font-weight: bold; }
+    .p-compacta h2 { font-size: 9pt; font-weight: bold; margin: 10pt 0 4pt 0; }
+    .p-compacta .detalle th { background: [(${s.fondo3})]; color: [(${s.primario})]; font-weight: bold; font-size: 7pt;
+                              padding: 3pt 4pt; border: 0.5pt solid #BBBBBB; }
+    .p-compacta .detalle td { padding: 3pt 4pt; border: 0.5pt solid #BBBBBB; }
+    .p-compacta .totales { width: 180pt; margin-top: 6pt; }
+    .p-compacta .totales td { padding: 3pt 4pt; border: 0.5pt solid #BBBBBB; text-align: right; }
+    .p-compacta .totales tr.total td { background: [(${s.primario})]; color: #FFFFFF; font-weight: bold; font-size: 9pt; }
+    .p-compacta .condiciones td { padding: 3pt 4pt; border: 0.5pt solid #BBBBBB; }
+    .p-compacta .condiciones td.etq { background: [(${s.fondo})]; font-weight: bold; width: 20%; }
+    .p-compacta .extras { margin-top: 10pt; }
+    .p-compacta .extra { border: 0.5pt solid #BBBBBB; padding: 5pt 6pt; }
+    .p-compacta .extra h4 { color: [(${s.primario})]; }
 </style>
 </head>
 <body>
-<div class="hoja">
+<div th:class="'hoja p-' + ${d.plantilla}">
 
-<div class="pie" data-bloque="pie" data-tipo="pie" th:with="pie=${d['pie']}"><span
-     th:text="${pie != null ? pie['texto'] : ''}"></span><span
-     th:if="${pie != null and pie['paginas'] == true}">    Página <span class="np"></span></span></div>
+<div class="pie"><span data-editar="textos.pie" data-multi="1" data-ph="Pie de página (opcional): tus servicios, sitio web…"
+     th:text="${d.t('pie')}"></span><span class="pagina" th:if="${d.paginas}">Página <span class="np"></span></span></div>
 
-<div th:each="b : ${d['bloques']}" th:class="'blq blq-' + ${b['tipo']}"
-     th:attr="data-bloque=${b['id']},data-tipo=${b['tipo']}" th:switch="${b['tipo']}">
+<!-- ENCABEZADO -->
+<table class="enc">
+    <tr>
+        <td class="enc-izq">
+            <div th:if="${s.imagen(e.logo) != null}" class="logo-caja" data-accion="logo" title="Clic para cambiar el logo"><img
+                 class="logo" th:src="${s.imagen(e.logo)}"/><span th:if="${ed}" class="solo-editor quitar"
+                 data-accion="quitar-logo" title="Quitar logo">✕</span></div>
+            <div th:if="${ed and s.imagen(e.logo) == null}" class="solo-editor subir-logo" data-accion="logo">+ Subir logo<br/><small>o suéltalo aquí</small></div>
+            <div th:if="${d.mostrarNombre and (ed or e.nombre != null)}" class="nombre" th:classappend="${d.mayusculas} ? 'mayus'"
+                 data-editar="empresa.nombre" data-ph="Tu empresa"><th:block th:if="${e.nombre != null}"><span class="n1"
+                 th:text="${e.nombreParte(0)}">MI</span><span class="n2" th:unless="${#strings.isEmpty(e.nombreParte(1))}"
+                 th:text="' ' + ${e.nombreParte(1)}"> EMPRESA</span></th:block></div>
+            <div th:if="${ed or e.lema != null}" class="lema" data-editar="empresa.lema" data-ph="Lema o giro (opcional)" th:text="${e.lema}"></div>
+        </td>
+        <td class="enc-der">
+            <div class="cot" data-editar="textos.titulo" data-ph="COTIZACIÓN" th:text="${d.t('titulo')}">COTIZACIÓN</div>
+            <div class="dato"><b>Folio:</b> <span th:text="${c.folio}">COT-0001</span></div>
+            <div class="dato"><b>Fecha:</b> <span th:text="${f.fecha(c.fecha)}">23/09/2026</span></div>
+            <div class="dato"><b>Vigencia:</b> <span th:text="${c.vigenciaDias} + ' días'">15 días</span></div>
+        </td>
+    </tr>
+</table>
 
-    <table th:case="'encabezado'" class="encabezado">
+<!-- PROVEEDOR / CLIENTE -->
+<table class="partes">
+    <tr>
+        <td class="parte">
+            <h3 data-editar="textos.proveedor" data-ph="DE" th:text="${d.t('proveedor')}">DATOS DEL PROVEEDOR</h3>
+            <div th:if="${ed or e.nombre != null}" class="fuerte" data-editar="empresa.nombre" data-ph="Tu empresa" th:text="${e.nombre}"></div>
+            <div th:if="${ed or e.rfc != null}">RFC: <span data-editar="empresa.rfc" data-ph="Tu RFC" th:text="${e.rfc}"></span></div>
+            <div th:if="${ed or e.telefono != null}">Tel.: <span data-editar="empresa.telefono" data-ph="Tu teléfono" th:text="${e.telefono}"></span></div>
+            <div th:if="${ed or e.correo != null}">Correo: <span data-editar="empresa.correo" data-ph="Tu correo" th:text="${e.correo}"></span></div>
+            <div th:if="${ed or e.web != null}" data-editar="empresa.web" data-ph="Tu página web (opcional)" th:text="${e.web}"></div>
+            <div th:if="${ed or e.direccion != null}" class="dir" data-editar="empresa.direccion" data-multi="1" data-ph="Tu dirección" th:text="${e.direccion}"></div>
+            <div th:if="${ed or e.ejecutivo != null}">Ejecutivo: <span data-editar="empresa.ejecutivo" data-ph="Quién atiende" th:text="${e.ejecutivo}"></span></div>
+        </td>
+        <td class="entre-partes"></td>
+        <td class="parte">
+            <h3 data-editar="textos.cliente" data-ph="COTIZADO A" th:text="${d.t('cliente')}">COTIZADO A</h3>
+            <div class="fuerte" th:text="${c.cliente.nombre}">Cliente</div>
+            <div th:if="${c.cliente.contacto}">Contacto: <span th:text="${c.cliente.contacto}"></span></div>
+            <div th:if="${c.cliente.telefono}">Teléfono: <span th:text="${c.cliente.telefono}"></span></div>
+            <div th:if="${c.cliente.email}">Correo: <span th:text="${c.cliente.email}"></span></div>
+            <div th:if="${c.cliente.rfc}">RFC: <span th:text="${c.cliente.rfc}"></span></div>
+            <div th:if="${c.cliente.direccion}">Dirección: <span th:text="${c.cliente.direccion}"></span></div>
+        </td>
+    </tr>
+</table>
+
+<!-- DETALLE -->
+<h2 th:if="${ed or !#strings.isEmpty(d.t('detalle'))}" data-editar="textos.detalle" data-ph="Título de la tabla (opcional)"
+    th:text="${d.t('detalle')}">Detalle de productos y servicios</h2>
+<table class="detalle">
+    <thead>
         <tr>
-            <td class="marca">
-                <img th:if="${b['logo'] == true and s.imagen(e.logo) != null}" th:src="${s.imagen(e.logo)}" class="logo"/>
-                <div class="nombre" th:if="${b['nombre'] == true and e.nombre != null}"
-                     th:classappend="${b['mayusculas'] == true} ? 'mayus'"><th:block
-                     th:text="${b['dosTonos'] == true ? e.nombreParte(0) : e.nombre}">MI</th:block><span
-                     th:if="${b['dosTonos'] == true and !#strings.isEmpty(e.nombreParte(1))}"
-                     th:text="' ' + ${e.nombreParte(1)}"> EMPRESA</span></div>
-                <div class="lema" th:if="${b['lema'] == true and e.lema != null}" th:text="${e.lema}"></div>
-            </td>
-            <td class="titulo">
-                <div class="cot" th:text="${b['titulo']}">COTIZACIÓN</div>
-                <div class="dato"><b>Folio:</b> <span th:text="${c.folio}">COT-0001</span></div>
-                <div class="dato"><b>Fecha:</b> <span th:text="${f.fecha(c.fecha)}">23/09/2026</span></div>
-                <div class="dato"><b>Vigencia:</b> <span th:text="${c.vigenciaDias} + ' días'">15 días</span></div>
-            </td>
+            <th class="n" th:if="${d.numeroPartida}">#</th>
+            <th class="desc" data-editar="textos.colDescripcion" data-ph="Descripción" th:text="${d.t('colDescripcion')}">Descripción</th>
+            <th class="cant" data-editar="textos.colCantidad" data-ph="Cant." th:text="${d.t('colCantidad')}">Cant.</th>
+            <th class="pu" data-editar="textos.colPrecio" data-ph="Precio" th:text="${d.t('colPrecio')}">P. unitario</th>
+            <th class="imp" data-editar="textos.colImporte" data-ph="Importe" th:text="${d.t('colImporte')}">Importe</th>
         </tr>
-    </table>
-
-    <table th:case="'partes'" class="partes">
-        <tr>
-            <td>
-                <h3 th:text="${b['tituloProveedor']}">DATOS DEL PROVEEDOR</h3>
-                <div th:if="${e.nombre}" th:text="${e.nombre}"></div>
-                <div th:if="${e.rfc}">RFC: <span th:text="${e.rfc}"></span></div>
-                <div th:if="${e.telefono}">Tel.: <span th:text="${e.telefono}"></span></div>
-                <div th:if="${e.correo}">Correo: <span th:text="${e.correo}"></span></div>
-                <div th:if="${e.web}" th:text="${e.web}"></div>
-                <div th:if="${e.direccion}" th:text="${e.direccion}"></div>
-                <div th:if="${e.ejecutivo}">Ejecutivo: <span th:text="${e.ejecutivo}"></span></div>
-            </td>
-            <td>
-                <h3 th:text="${b['tituloCliente']}">COTIZADO A</h3>
-                <div>Empresa: <span th:text="${c.cliente.nombre}">Cliente</span></div>
-                <div th:if="${c.cliente.contacto}">Contacto: <span th:text="${c.cliente.contacto}"></span></div>
-                <div th:if="${c.cliente.telefono}">Teléfono: <span th:text="${c.cliente.telefono}"></span></div>
-                <div th:if="${c.cliente.email}">Correo: <span th:text="${c.cliente.email}"></span></div>
-                <div th:if="${c.cliente.rfc}">RFC: <span th:text="${c.cliente.rfc}"></span></div>
-                <div th:if="${c.cliente.direccion}">Dirección: <span th:text="${c.cliente.direccion}"></span></div>
-            </td>
+    </thead>
+    <tbody>
+        <tr th:each="p, i : ${c.partidas}">
+            <td class="n" th:if="${d.numeroPartida}" th:text="${i.count}">1</td>
+            <td th:text="${p.descripcion}">Producto</td>
+            <td class="cant" th:text="${f.cantidad(p.cantidad)}">1</td>
+            <td class="pu" th:text="${f.moneda(p.precioUnitario)}">$0.00</td>
+            <td class="imp" th:text="${f.moneda(p.importe)}">$0.00</td>
         </tr>
+    </tbody>
+</table>
+
+<table class="totales">
+    <tr><td class="etq">Subtotal</td><td th:text="${f.moneda(c.subtotal)}">$0.00</td></tr>
+    <tr th:if="${c.aplicaIva}"><td class="etq" th:text="'IVA ' + ${f.pct(c.tasaIva)} + '%'">IVA 16%</td><td th:text="${f.moneda(c.iva)}">$0.00</td></tr>
+    <tr><td class="etq">Envío</td><td th:text="${f.moneda(c.envio)}">$0.00</td></tr>
+    <tr class="total"><td class="etq">TOTAL</td><td th:text="${f.moneda(c.total)}">$0.00</td></tr>
+</table>
+
+<!-- CONDICIONES (los textos vienen de cada cotización) -->
+<div th:if="${c.formaPago != null or c.tiempoEntrega != null or c.garantia != null or c.observaciones != null}">
+    <h2 th:if="${ed or !#strings.isEmpty(d.t('condiciones'))}" data-editar="textos.condiciones" data-ph="Título de condiciones (opcional)"
+        th:text="${d.t('condiciones')}">Condiciones comerciales</h2>
+    <table class="condiciones">
+        <tr th:if="${c.formaPago}"><td class="etq">Forma de pago</td><td th:text="${c.formaPago}"></td></tr>
+        <tr th:if="${c.tiempoEntrega}"><td class="etq">Tiempo de entrega</td><td th:text="${c.tiempoEntrega}"></td></tr>
+        <tr th:if="${c.garantia}"><td class="etq">Garantía</td><td th:text="${c.garantia}"></td></tr>
+        <tr th:if="${c.observaciones}"><td class="etq">Observaciones</td><td th:text="${c.observaciones}"></td></tr>
     </table>
+</div>
 
-    <th:block th:case="'detalle'">
-        <h2 th:unless="${#strings.isEmpty(b['titulo'])}" th:text="${b['titulo']}">Detalle</h2>
-        <table class="detalle">
-            <thead>
-                <tr>
-                    <th class="n" th:if="${b['numero'] == true}">#</th>
-                    <th>Descripción</th>
-                    <th class="cant">Cant.</th>
-                    <th class="pu">P. unitario</th>
-                    <th class="imp">Importe</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="p, i : ${c.partidas}">
-                    <td class="n" th:if="${b['numero'] == true}" th:text="${i.count}">1</td>
-                    <td th:text="${p.descripcion}">Producto</td>
-                    <td class="cant" th:text="${f.cantidad(p.cantidad)}">1</td>
-                    <td class="pu" th:text="${f.moneda(p.precioUnitario)}">$0.00</td>
-                    <td class="imp" th:text="${f.moneda(p.importe)}">$0.00</td>
-                </tr>
-            </tbody>
-        </table>
-    </th:block>
+<!-- SECCIONES OPCIONALES -->
+<table class="extras" th:if="${d.banco.activo or d.nota.activo}">
+    <tr>
+        <td class="extra" th:if="${d.banco.activo}">
+            <span th:if="${ed}" class="solo-editor quitar" data-accion="quitar:banco" title="Quitar datos bancarios">✕</span>
+            <h4 data-editar="banco.titulo" data-ph="Datos bancarios" th:text="${d.banco.titulo}">Datos bancarios</h4>
+            <div class="extra-texto" data-editar="banco.texto" data-multi="1" data-ph="Banco, cuenta, CLABE…" th:text="${d.banco.texto}"></div>
+        </td>
+        <td class="hueco" th:if="${d.banco.activo and d.nota.activo}"></td>
+        <td class="extra" th:if="${d.nota.activo}">
+            <span th:if="${ed}" class="solo-editor quitar" data-accion="quitar:nota" title="Quitar nota">✕</span>
+            <h4 data-editar="nota.titulo" data-ph="Nota" th:text="${d.nota.titulo}">Nota</h4>
+            <div class="extra-texto" data-editar="nota.texto" data-multi="1" data-ph="Escribe aquí tu nota" th:text="${d.nota.texto}"></div>
+        </td>
+    </tr>
+</table>
 
-    <table th:case="'totales'" class="totales">
-        <tr><td class="etq">Subtotal</td><td th:text="${f.moneda(c.subtotal)}">$0.00</td></tr>
-        <tr th:if="${c.aplicaIva}"><td class="etq" th:text="'IVA ' + ${f.pct(c.tasaIva)} + '%'">IVA 16%</td><td th:text="${f.moneda(c.iva)}">$0.00</td></tr>
-        <tr><td class="etq">Envío</td><td th:text="${f.moneda(c.envio)}">$0.00</td></tr>
-        <tr class="total"><td class="etq">TOTAL</td><td th:text="${f.moneda(c.total)}">$0.00</td></tr>
-    </table>
-
-    <th:block th:case="'condiciones'">
-        <th:block th:if="${c.formaPago != null or c.tiempoEntrega != null or c.garantia != null or c.observaciones != null}">
-            <h2 th:unless="${#strings.isEmpty(b['titulo'])}" th:text="${b['titulo']}">Condiciones comerciales</h2>
-            <table class="condiciones">
-                <tr th:if="${c.formaPago}"><td class="etq">Forma de pago</td><td th:text="${c.formaPago}"></td></tr>
-                <tr th:if="${c.tiempoEntrega}"><td class="etq">Tiempo de entrega</td><td th:text="${c.tiempoEntrega}"></td></tr>
-                <tr th:if="${c.garantia}"><td class="etq">Garantía</td><td th:text="${c.garantia}"></td></tr>
-                <tr th:if="${c.observaciones}"><td class="etq">Observaciones</td><td th:text="${c.observaciones}"></td></tr>
-            </table>
-        </th:block>
-    </th:block>
-
-    <h2 th:case="'titulo'" th:text="${b['texto']}"
-        th:style="|color: ${s.color(b['color'] ?: 'primario')}; text-align: ${s.alinear(b['alineacion'])}|">Título</h2>
-
-    <div th:case="'texto'" class="parrafo" th:text="${b['texto']}"
-         th:style="|font-size: ${s.num(b['tamano'], 9, 6, 30)}pt; text-align: ${s.alinear(b['alineacion'])}; color: ${s.color(b['color'])}; font-weight: ${b['negrita'] == true ? 'bold' : 'normal'}|">Texto</div>
-
-    <th:block th:case="'imagen'">
-        <div th:if="${s.imagen(b['imagen']) != null}" th:style="|text-align: ${s.alinear(b['alineacion'])}|"><img
-             th:src="${s.imagen(b['imagen'])}" th:style="|height: ${s.num(b['alto'], 60, 10, 600)}pt|"/></div>
-        <div th:unless="${s.imagen(b['imagen']) != null}" class="solo-editor hueco">Imagen: elige un archivo en el panel de la derecha</div>
-    </th:block>
-
-    <div th:case="'firma'" th:style="|text-align: ${s.alinear(b['alineacion'] ?: 'centro')}|">
-        <div class="firma-caja">
-            <div class="firma-linea"></div>
-            <div th:text="${#strings.isEmpty(b['nombre']) ? e.ejecutivo : b['nombre']}">Nombre</div>
-            <div class="firma-puesto" th:text="${b['puesto']}">Puesto</div>
-        </div>
+<!-- firma: titulo = nombre (vacío = el ejecutivo), texto = puesto -->
+<div class="firma" th:if="${d.firma.activo}">
+    <div class="firma-caja">
+        <span th:if="${ed}" class="solo-editor quitar" data-accion="quitar:firma" title="Quitar firma">✕</span>
+        <div class="firma-linea"></div>
+        <div data-editar="firma.titulo" data-ph="Nombre de quien firma"
+             th:text="${#strings.isEmpty(d.firma.titulo) ? e.ejecutivo : d.firma.titulo}">Nombre</div>
+        <div class="firma-puesto" data-editar="firma.texto" data-ph="Puesto" th:text="${d.firma.texto}">Puesto</div>
     </div>
+</div>
 
-    <div th:case="'linea'" class="linea" th:style="|border-top-color: ${s.color(b['color'] ?: 'acento')}|"></div>
-
-    <div th:case="'espacio'" th:style="|height: ${s.num(b['alto'], 12, 1, 400)}pt|"></div>
-
-    <div th:case="'salto'" class="solo-editor salto-marca">Salto de página</div>
+<div th:if="${ed}" class="solo-editor agregar">
+    <span th:unless="${d.banco.activo}" data-accion="agregar:banco">+ Datos bancarios</span>
+    <span th:unless="${d.nota.activo}" data-accion="agregar:nota">+ Nota</span>
+    <span th:unless="${d.firma.activo}" data-accion="agregar:firma">+ Línea de firma</span>
 </div>
 
 </div>

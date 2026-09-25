@@ -300,7 +300,7 @@
         try {
             const r = await fetch(base() + 'api/cotizaciones' + (COT.id ? '/' + COT.id : ''), {
                 method: COT.id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...csrf() },
                 body: JSON.stringify(datos()),
             });
             const res = await r.json().catch(() => ({}));
@@ -318,6 +318,12 @@
     }
 
     function marcarCambio() { cambios = true; }
+
+    /** Encabezado con el token CSRF (lo exige el login para POST/PUT). */
+    function csrf() {
+        const token = $('meta[name=_csrf]');
+        return token ? { [$('meta[name=_csrf_header]').content]: token.content } : {};
+    }
 
     function base() {
         return document.querySelector('.barra .logo').getAttribute('href').replace(/\/?$/, '/');

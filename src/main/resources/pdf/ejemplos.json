@@ -1,0 +1,18 @@
+[
+  { "nombre": "Clásica", "descripcion": "Encabezado en dos bloques de color. Formal y clara.",
+    "plantilla": "clasica", "colores": { "primario": "#243B53", "acento": "#3E7CB1" } },
+  { "nombre": "Clásica verde azulado", "descripcion": "La clásica en tonos verde azulado.",
+    "plantilla": "clasica", "colores": { "primario": "#184E62", "acento": "#1A9C8D" } },
+  { "nombre": "Minimalista", "descripcion": "Blanco y negro, líneas finas. Se imprime bien en cualquier impresora.",
+    "plantilla": "minimalista", "colores": { "primario": "#1F2937", "acento": "#1F2937" } },
+  { "nombre": "Minimalista azul", "descripcion": "Minimalista con detalles en azul.",
+    "plantilla": "minimalista", "colores": { "primario": "#1E3A5F", "acento": "#2563EB" } },
+  { "nombre": "Moderna", "descripcion": "Franja de color arriba, tarjetas y renglones alternados.",
+    "plantilla": "moderna", "colores": { "primario": "#2D3436", "acento": "#E17055" } },
+  { "nombre": "Moderna morada", "descripcion": "La moderna en morado.",
+    "plantilla": "moderna", "colores": { "primario": "#3D2C5E", "acento": "#8E6CCF" } },
+  { "nombre": "Compacta", "descripcion": "Letra más chica y tabla con cuadrícula: caben más partidas por hoja.",
+    "plantilla": "compacta", "colores": { "primario": "#37474F", "acento": "#00897B" } },
+  { "nombre": "Compacta vino", "descripcion": "La compacta en color vino.",
+    "plantilla": "compacta", "colores": { "primario": "#5B1A2E", "acento": "#A93246" } }
+]

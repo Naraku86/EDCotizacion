@@ -1,20 +1,24 @@
 {
-  "estilo": {
-    "primario": "#243B53",
-    "acento": "#3E7CB1",
-    "texto": "#2B3A40",
-    "fuenteMarca": "Exo2",
-    "tamano": 8.5
+  "plantilla": "clasica",
+  "papel": "carta",
+  "colores": { "primario": "#243B53", "acento": "#3E7CB1" },
+  "textos": {
+    "titulo": "COTIZACIÓN",
+    "proveedor": "DATOS DEL PROVEEDOR",
+    "cliente": "COTIZADO A",
+    "detalle": "Detalle de productos y servicios",
+    "colDescripcion": "Descripción",
+    "colCantidad": "Cant.",
+    "colPrecio": "P. unitario",
+    "colImporte": "Importe",
+    "condiciones": "Condiciones comerciales",
+    "pie": "Mi Empresa  •  Productos  •  Servicios  •  Soporte"
   },
-  "pie": {
-    "texto": "Mi Empresa  •  Productos  •  Servicios  •  Soporte",
-    "paginas": true
-  },
-  "bloques": [
-    { "id": "encabezado", "tipo": "encabezado", "titulo": "COTIZACIÓN", "logo": true, "nombre": true, "dosTonos": true, "mayusculas": true, "lema": true },
-    { "id": "partes", "tipo": "partes", "tituloProveedor": "DATOS DEL PROVEEDOR", "tituloCliente": "COTIZADO A" },
-    { "id": "detalle", "tipo": "detalle", "titulo": "Detalle de productos y servicios", "numero": true },
-    { "id": "totales", "tipo": "totales" },
-    { "id": "condiciones", "tipo": "condiciones", "titulo": "Condiciones comerciales" }
-  ]
+  "mostrarNombre": true,
+  "mayusculas": true,
+  "numeroPartida": true,
+  "paginas": true,
+  "banco": { "activo": false, "titulo": "Datos bancarios", "texto": "Banco: \nCuenta: \nCLABE: \nA nombre de: " },
+  "nota": { "activo": false, "titulo": "Nota", "texto": "Gracias por su preferencia." },
+  "firma": { "activo": false, "titulo": "", "texto": "Ejecutivo de ventas" }
 }

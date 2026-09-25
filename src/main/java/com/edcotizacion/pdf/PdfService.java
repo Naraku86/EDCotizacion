@@ -3,7 +3,6 @@ package com.edcotizacion.pdf;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.Normalizer;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.thymeleaf.ITemplateEngine;
@@ -31,28 +30,32 @@ public class PdfService {
         return generar(c, disenos.diseno(), disenos.empresa());
     }
 
-    public byte[] generar(Cotizacion c, Map<String, Object> diseno, Empresa empresa) throws IOException {
+    public byte[] generar(Cotizacion c, Diseno diseno, Empresa empresa) throws IOException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.useFastMode();
             fuente(builder, "Exo2-Bold.ttf", "Exo2", 700);
             fuente(builder, "LiberationSans-Regular.ttf", "Liberation", 400);
             fuente(builder, "LiberationSans-Bold.ttf", "Liberation", 700);
-            builder.withHtmlContent(html(c, diseno, empresa), null);
+            builder.withHtmlContent(html(c, diseno, empresa, false), null);
             builder.toStream(out);
             builder.run();
             return out.toByteArray();
         }
     }
 
-    /** El mismo HTML sirve para el PDF y para la vista previa del editor. */
-    public String html(Cotizacion c, Map<String, Object> diseno, Empresa empresa) {
+    /**
+     * El mismo HTML sirve para el PDF y para el editor. Con editor = true los textos vacíos
+     * se muestran con su ayuda ("Tu RFC") y aparecen los botones para subir logo y agregar secciones.
+     */
+    public String html(Cotizacion c, Diseno diseno, Empresa empresa, boolean editor) {
         Context ctx = new Context();
         ctx.setVariable("c", c);
         ctx.setVariable("f", formato);
         ctx.setVariable("d", diseno);
         ctx.setVariable("e", empresa.limpia());
-        ctx.setVariable("s", new Estilo(diseno.get("estilo")));
+        ctx.setVariable("s", new Estilo(diseno.getColores()));
+        ctx.setVariable("ed", editor);
         return engine.process("pdf/cotizacion", ctx);
     }
 

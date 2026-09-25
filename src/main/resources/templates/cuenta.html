@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragmentos :: head('Cuenta')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra('cuenta')}"></header>
+<main style="max-width: 520px">
+    <h1>Usuario y contraseña</h1>
+
+    <div class="aviso error" th:if="${error}" th:text="${error}"></div>
+
+    <form class="tarjeta" method="post" th:action="@{/cuenta}">
+        <div class="campo">
+            <label for="nombre">Usuario</label>
+            <input id="nombre" name="nombre" th:value="${usuario}" autocomplete="username" required>
+        </div>
+        <div class="campo">
+            <label for="nuevo">Contraseña nueva</label>
+            <input id="nuevo" name="nuevo" type="password" autocomplete="new-password" minlength="4" required>
+        </div>
+        <div class="campo">
+            <label for="confirmar">Repite la contraseña nueva</label>
+            <input id="confirmar" name="confirmar" type="password" autocomplete="new-password" minlength="4" required>
+        </div>
+        <div class="campo">
+            <label for="actual">Contraseña actual (para confirmar que eres tú)</label>
+            <input id="actual" name="actual" type="password" autocomplete="current-password" required>
+        </div>
+        <div class="botonera">
+            <button class="btn primario">Guardar y volver a entrar</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

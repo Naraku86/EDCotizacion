@@ -1,19 +1,33 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
 <head th:fragment="head(titulo)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- token CSRF para las peticiones fetch() de los scripts -->
+    <meta name="_csrf" th:if="${_csrf}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf}" th:content="${_csrf.headerName}">
     <title th:text="${titulo} + ' · Cotizaciones'">Cotizaciones</title>
     <link rel="stylesheet" th:href="@{/app.css}">
 </head>
 <body>
-<header th:fragment="barra(activo)" class="barra">
+<th:block th:fragment="barra(activo)">
+<header class="barra">
     <a class="logo" th:href="@{/}"><th:block th:text="${marca.nombreParte(0)}">MI</th:block> <span th:text="${marca.nombreParte(1)}">EMPRESA</span></a>
     <nav>
         <a th:href="@{/}" th:classappend="${activo == 'lista'} ? 'activo'">Cotizaciones</a>
         <a th:href="@{/configuracion}" th:classappend="${activo == 'config'} ? 'activo'">Configuración</a>
     </nav>
     <a class="btn primario nueva" th:href="@{/cotizaciones/nueva}">+ Nueva cotización</a>
+    <div class="sesion" sec:authorize="isAuthenticated()">
+        <a th:href="@{/cuenta}" th:classappend="${activo == 'cuenta'} ? 'activo'" title="Cambiar usuario o contraseña"
+           sec:authentication="name">admin</a>
+        <form method="post" th:action="@{/logout}"><button title="Cerrar sesión">Salir</button></form>
+    </div>
 </header>
+<div class="aviso-password" th:if="${passwordDefault}">
+    Estás usando el usuario y contraseña de fábrica (admin / admin).
+    <a th:href="@{/cuenta}">Cámbialos aquí</a>, sobre todo si otras computadoras de tu red pueden abrir la app.
+</div>
+</th:block>
 </body>
 </html>
