@@ -27,7 +27,7 @@ import com.edcotizacion.PruebaIntegracion;
 class SeguridadIT extends PruebaIntegracion {
 
     private static final String COTIZACION_INVALIDA = """
-            {"fecha":"2026-09-25","vigenciaDias":15,"cliente":{"nombre":"X"},"aplicaIva":true,"tasaIva":16,
+            {"empresaId":1,"fecha":"2026-09-25","vigenciaDias":15,"cliente":{"nombre":"X"},"aplicaIva":true,"tasaIva":16,
              "partidas":[{"descripcion":"Laptop","cantidad":0,"precioUnitario":100}],
              "folio":"HACKEO","estado":"ACEPTADA"}""";
 

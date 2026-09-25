@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,8 @@ import com.edcotizacion.cotizacion.Cotizacion;
 import com.edcotizacion.cotizacion.CotizacionService;
 import com.edcotizacion.cotizacion.DatosCliente;
 import com.edcotizacion.cotizacion.Partida;
+import com.edcotizacion.empresa.Emisor;
+import com.edcotizacion.empresa.EmisorService;
 import com.edcotizacion.pdf.DisenoService;
 import com.edcotizacion.pdf.Empresa;
 import com.edcotizacion.pdf.PdfService;
@@ -31,9 +34,12 @@ import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Editor de la plantilla del PDF: se edita directo sobre la hoja. */
+/**
+ * Editor de la plantilla del PDF de cada empresa: se edita directo sobre la hoja.
+ * /configuracion/plantilla (sin empresa) se conserva para la empresa predeterminada.
+ */
 @Controller
-@RequestMapping("/configuracion/plantilla")
+@RequestMapping({"/configuracion/plantilla", "/configuracion/empresas/{empresaId}/plantilla"})
 public class PlantillaController {
 
     /** Lo que edita la pantalla: el diseño y los datos de la empresa. */
@@ -41,15 +47,17 @@ public class PlantillaController {
     }
 
     private final DisenoService disenos;
+    private final EmisorService emisores;
     private final PdfService pdf;
     private final CotizacionService cotizaciones;
     private final ConfigService config;
     private final JsonMapper json;
     private final Validator validador;
 
-    public PlantillaController(DisenoService disenos, PdfService pdf, CotizacionService cotizaciones,
-            ConfigService config, JsonMapper json, Validator validador) {
+    public PlantillaController(DisenoService disenos, EmisorService emisores, PdfService pdf,
+            CotizacionService cotizaciones, ConfigService config, JsonMapper json, Validator validador) {
         this.disenos = disenos;
+        this.emisores = emisores;
         this.pdf = pdf;
         this.cotizaciones = cotizaciones;
         this.config = config;
@@ -58,9 +66,13 @@ public class PlantillaController {
     }
 
     @GetMapping
-    public String editor(Model model) {
+    public String editor(@PathVariable(required = false) Long empresaId, Model model) {
+        Emisor emisor = emisor(empresaId);
+        long id = emisor.getId();
+        model.addAttribute("emisor", emisor);
+        model.addAttribute("plantillaUrl", "/configuracion/empresas/" + id + "/plantilla");
         model.addAttribute("datosJson", json.writeValueAsString(
-                Map.of("diseno", disenos.diseno(), "empresa", disenos.empresa())));
+                Map.of("diseno", disenos.diseno(id), "empresa", disenos.empresa(id))));
         model.addAttribute("genericoJson", json.writeValueAsString(disenos.generico()));
         model.addAttribute("ejemplosJson", json.writeValueAsString(disenos.ejemplos()));
         return "plantilla";
@@ -78,8 +90,8 @@ public class PlantillaController {
 
     @PostMapping
     @ResponseBody
-    public Map<String, Boolean> guardar(@Valid @RequestBody Datos d) {
-        disenos.guardar(d.diseno(), d.empresa());
+    public Map<String, Boolean> guardar(@PathVariable(required = false) Long empresaId, @Valid @RequestBody Datos d) {
+        disenos.guardar(emisor(empresaId).getId(), d.diseno(), d.empresa());
         return Map.of("ok", true);
     }
 
@@ -96,8 +108,14 @@ public class PlantillaController {
 
     /** PDF de ejemplo con la plantilla guardada. */
     @GetMapping("/muestra.pdf")
-    public ResponseEntity<byte[]> muestraGuardada() throws IOException {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(pdf.generar(muestra()));
+    public ResponseEntity<byte[]> muestraGuardada(@PathVariable(required = false) Long empresaId) throws IOException {
+        long id = emisor(empresaId).getId();
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                .body(pdf.generar(muestra(), disenos.diseno(id), disenos.empresa(id)));
+    }
+
+    private Emisor emisor(Long empresaId) {
+        return empresaId == null ? emisores.predeterminada() : emisores.obtener(empresaId);
     }
 
     private Cotizacion muestra() {

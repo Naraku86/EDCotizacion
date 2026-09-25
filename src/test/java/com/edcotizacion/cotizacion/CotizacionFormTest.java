@@ -39,7 +39,7 @@ class CotizacionFormTest {
     }
 
     private static CotizacionForm form(DatosCliente cliente, PartidaForm... partidas) {
-        return new CotizacionForm(LocalDate.of(2026, 9, 25), 15, cliente, true, new BigDecimal("16"), null,
+        return new CotizacionForm(1L, LocalDate.of(2026, 9, 25), 15, cliente, true, new BigDecimal("16"), null,
                 "  ", "3 días ", null, null, Arrays.asList(partidas));
     }
 

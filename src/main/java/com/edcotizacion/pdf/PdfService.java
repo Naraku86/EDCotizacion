@@ -27,7 +27,7 @@ public class PdfService {
     }
 
     public byte[] generar(Cotizacion c) throws IOException {
-        return generar(c, disenos.diseno(), disenos.empresa());
+        return generar(c, disenos.diseno(c.getEmpresa().getId()), disenos.empresa(c.getEmpresa().getId()));
     }
 
     public byte[] generar(Cotizacion c, Diseno diseno, Empresa empresa) throws IOException {

@@ -2,14 +2,13 @@ package com.edcotizacion.pdf;
 
 import static com.edcotizacion.comun.Textos.limpio;
 
-import java.util.List;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Datos del proveedor que imprime el PDF. Se guardan en la tabla config como empresa.*.
+ * Datos del proveedor que imprime el PDF. Se guardan con la plantilla de cada empresa emisora.
  * Los campos vacíos quedan en null para que la plantilla no imprima "RFC:" sin valor.
  *
  * @param logo imagen como data URI (data:image/png;base64,...)
@@ -30,9 +29,6 @@ public record Empresa(
 
     /** ~1.5 MB de imagen en base64. */
     public static final int LOGO_MAXIMO = 2_000_000;
-
-    public static final List<String> CAMPOS = List.of(
-            "nombre", "lema", "rfc", "telefono", "correo", "web", "direccion", "ejecutivo", "logo");
 
     public Empresa {
         nombre = limpio(nombre);

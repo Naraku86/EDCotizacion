@@ -21,6 +21,8 @@ import jakarta.validation.constraints.Size;
  * folio, estado, totales y fechas internas los pone el servidor.
  */
 public record CotizacionForm(
+        @NotNull(message = "Elige la empresa emisora.")
+        @Positive(message = "La empresa emisora no es válida.") Long empresaId,
         @NotNull(message = "Falta la fecha.") LocalDate fecha,
         @PositiveOrZero(message = "La vigencia no puede ser negativa.")
         @Max(value = 3650, message = "La vigencia es demasiado larga.") int vigenciaDias,
@@ -72,7 +74,7 @@ public record CotizacionForm(
 
     /** Para editar o duplicar una cotización existente. */
     public static CotizacionForm de(Cotizacion c) {
-        return new CotizacionForm(c.getFecha(), c.getVigenciaDias(), c.getCliente(), c.isAplicaIva(),
+        return new CotizacionForm(c.getEmpresa().getId(), c.getFecha(), c.getVigenciaDias(), c.getCliente(), c.isAplicaIva(),
                 c.getTasaIva(), c.getEnvio(), c.getFormaPago(), c.getTiempoEntrega(), c.getGarantia(),
                 c.getObservaciones(),
                 c.getPartidas().stream()

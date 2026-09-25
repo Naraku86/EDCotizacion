@@ -12,15 +12,16 @@
 </head>
 <body>
 <th:block th:fragment="barra(activo)">
+<a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
 <header class="barra">
     <a class="logo" th:href="@{/}"><th:block th:text="${marca.nombreParte(0)}">MI</th:block> <span th:text="${marca.nombreParte(1)}">EMPRESA</span></a>
-    <nav>
-        <a th:href="@{/}" th:classappend="${activo == 'lista'} ? 'activo'">Cotizaciones</a>
-        <a th:href="@{/configuracion}" th:classappend="${activo == 'config'} ? 'activo'">Configuración</a>
+    <nav aria-label="Navegación principal">
+        <a th:href="@{/}" th:classappend="${activo == 'lista'} ? 'activo'" th:aria-current="${activo == 'lista'} ? 'page'">Cotizaciones</a>
+        <a th:href="@{/configuracion}" th:classappend="${activo == 'config'} ? 'activo'" th:aria-current="${activo == 'config'} ? 'page'">Configuración</a>
     </nav>
     <a class="btn primario nueva" th:href="@{/cotizaciones/nueva}">+ Nueva cotización</a>
     <div class="sesion" sec:authorize="isAuthenticated()">
-        <a th:href="@{/cuenta}" th:classappend="${activo == 'cuenta'} ? 'activo'" title="Cambiar usuario o contraseña"
+        <a th:href="@{/cuenta}" th:classappend="${activo == 'cuenta'} ? 'activo'" th:aria-current="${activo == 'cuenta'} ? 'page'" title="Cambiar usuario o contraseña"
            sec:authentication="name">admin</a>
         <form method="post" th:action="@{/logout}"><button title="Cerrar sesión">Salir</button></form>
     </div>

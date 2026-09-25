@@ -3,7 +3,7 @@
 <head th:replace="~{fragmentos :: head('Cuenta')}"></head>
 <body>
 <header th:replace="~{fragmentos :: barra('cuenta')}"></header>
-<main style="max-width: 520px">
+<main id="contenido" class="pagina-cuenta">
     <h1>Usuario y contraseña</h1>
 
     <div class="aviso error" th:if="${error}" th:text="${error}"></div>

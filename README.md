@@ -2,6 +2,7 @@
 
 Aplicación local para hacer cotizaciones y generar su PDF.
 
+- Varias empresas en una misma instancia: cada una con sus datos, logo y plantilla; elige la emisora al cotizar.
 - Clientes y productos se dan de alta solos: escribes el nombre y, si no existe, se agrega al guardar.
 - Precio sugerido = costo + % de ganancia (30% por defecto), o escribes directo el precio final (con o sin IVA).
 - IVA opcional por cotización; el envío va aparte y no lleva IVA.
@@ -47,7 +48,7 @@ muestra un aviso; se cambian en **Cuenta** (tu nombre de usuario, arriba a la de
 
 ## Plantilla del PDF
 
-**Configuración › Editar plantilla** muestra la hoja tal como saldrá el PDF y se edita encima:
+**Configuración › Empresas y plantillas › Editar datos y plantilla** muestra la hoja tal como saldrá el PDF y se edita encima:
 
 - Clic en cualquier texto (nombre, RFC, títulos, encabezados de la tabla, pie…) para cambiarlo.
   Lo que dejes vacío no se imprime.
@@ -58,9 +59,22 @@ muestra un aviso; se cambian en **Cuenta** (tu nombre de usuario, arriba a la de
 - Secciones opcionales: *+ Datos bancarios*, *+ Nota*, *+ Línea de firma*.
 - *Ver PDF* sin guardar, deshacer/rehacer (Ctrl+Z / Ctrl+Y) y Ctrl+S para guardar.
 
-El diseño se guarda como JSON en la tabla `config` (`plantilla.diseno`) y los datos de la empresa como
-`empresa.*`. El HTML del PDF está en `src/main/resources/templates/pdf/cotizacion.html`; los ejemplos
+Cada empresa guarda sus datos y diseño como JSON en la tabla `empresa`. Las cotizaciones
+conservan su `empresa_id`, también al duplicarlas; sus PDF usan la plantilla actual de esa empresa. El HTML del PDF está en `src/main/resources/templates/pdf/cotizacion.html`; los ejemplos
 de la galería en `src/main/resources/pdf/ejemplos.json`.
+
+## Varias empresas en una misma instancia
+
+1. En **Configuración › Empresas y plantillas**, captura el nombre y pulsa **Agregar empresa**.
+2. Edita sus datos, logo y diseño, y guarda la plantilla.
+3. Al crear o editar una cotización, elige **Empresa emisora**. El PDF usa sus datos y plantilla.
+4. El historial muestra la empresa debajo del folio y permite filtrar por emisora.
+
+Los clientes, productos, folios consecutivos y preferencias generales se comparten entre empresas.
+La empresa no limita permisos: los usuarios de la instancia pueden trabajar con todas.
+Al actualizar, la empresa y plantilla existentes se conservan como primera empresa y las cotizaciones
+anteriores se vinculan a ella. Respalda la base antes de actualizar; la versión anterior de la aplicación
+requiere restaurar ese respaldo si se desea volver atrás.
 
 ## Varias instalaciones en la misma PC
 

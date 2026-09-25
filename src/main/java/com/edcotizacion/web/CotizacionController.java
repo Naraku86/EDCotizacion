@@ -18,6 +18,7 @@ import com.edcotizacion.cotizacion.Cotizacion;
 import com.edcotizacion.cotizacion.CotizacionForm;
 import com.edcotizacion.cotizacion.CotizacionService;
 import com.edcotizacion.cotizacion.Estado;
+import com.edcotizacion.empresa.EmisorService;
 import com.edcotizacion.pdf.PdfService;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -29,18 +30,24 @@ public class CotizacionController {
     private final PdfService pdf;
     private final ConfigService config;
     private final JsonMapper json;
+    private final EmisorService emisores;
 
-    public CotizacionController(CotizacionService service, PdfService pdf, ConfigService config, JsonMapper json) {
+    public CotizacionController(CotizacionService service, PdfService pdf, ConfigService config, JsonMapper json,
+            EmisorService emisores) {
         this.service = service;
         this.pdf = pdf;
         this.config = config;
         this.json = json;
+        this.emisores = emisores;
     }
 
     @GetMapping("/")
     public String lista(@RequestParam(required = false) String q,
-            @RequestParam(required = false) Estado estado, Model model) {
-        model.addAttribute("cotizaciones", service.buscar(q, estado));
+            @RequestParam(required = false) Estado estado, @RequestParam(required = false) Long empresaId,
+            Model model) {
+        model.addAttribute("cotizaciones", service.buscar(q, estado, empresaId));
+        model.addAttribute("empresas", emisores.todas());
+        model.addAttribute("empresaId", empresaId);
         model.addAttribute("q", q);
         model.addAttribute("estado", estado);
         model.addAttribute("estados", Estado.values());
@@ -58,6 +65,7 @@ public class CotizacionController {
     }
 
     private String formulario(Cotizacion c, Model model) {
+        model.addAttribute("empresas", emisores.todas());
         model.addAttribute("cot", c);
         model.addAttribute("cotJson", json.writeValueAsString(CotizacionForm.de(c)));
         model.addAttribute("gananciaDefault", config.getDecimal(ConfigService.GANANCIA_DEFAULT));

@@ -3,7 +3,7 @@
 <head th:replace="~{fragmentos :: head(${cot.id} ? ${cot.folio} : 'Nueva cotización')}"></head>
 <body>
 <header th:replace="~{fragmentos :: barra('form')}"></header>
-<main>
+<main id="contenido" class="pagina-formulario">
     <h1>
         <span th:text="${cot.id} ? 'Cotización ' + ${cot.folio} : 'Nueva cotización'">Nueva cotización</span>
         <small th:if="${cot.id}" th:text="${cot.estado.etiqueta}"></small>
@@ -11,6 +11,18 @@
     </h1>
 
     <div id="error" class="aviso error" hidden></div>
+
+    <section class="tarjeta emisor-cotizacion">
+        <div>
+            <label for="empresaId">Empresa emisora</label>
+            <select id="empresaId" required aria-describedby="ayuda-emisor">
+                <option th:each="e : ${empresas}" th:value="${e.id}" th:text="${e.nombre}"
+                        th:selected="${e.id == cot.empresa.id}"></option>
+            </select>
+            <p id="ayuda-emisor" class="tenue">El PDF llevará los datos, el logo y la plantilla de esta empresa.</p>
+        </div>
+        <a class="btn" th:href="@{/configuracion}">Administrar empresas</a>
+    </section>
 
     <!-- Cliente -->
     <section class="tarjeta">
@@ -44,6 +56,8 @@
     <!-- Partidas -->
     <section class="tarjeta">
         <h2>Productos y servicios</h2>
+        <p class="ayuda-tabla">Desliza la tabla para capturar cantidades y precios →</p>
+        <div class="tabla-contenedor tabla-partidas" role="region" aria-label="Productos y servicios; desplázate para ver todas las columnas" tabindex="0">
         <table class="partidas" id="partidas">
             <thead>
             <tr>
@@ -61,6 +75,7 @@
             </thead>
             <tbody></tbody>
         </table>
+        </div>
         <div style="margin-top: 10px">
             <button class="btn" id="agregar" type="button">+ Agregar producto</button>
         </div>
@@ -103,13 +118,13 @@
                         <label><input type="checkbox" id="aplicaIva"> IVA</label>
                     </td>
                     <td>
-                        <input id="tasaIva" class="tasa num" type="number" step="0.01" min="0"> %
+                        <input id="tasaIva" aria-label="Tasa de IVA en porcentaje" class="tasa num" type="number" step="0.01" min="0"> %
                         &nbsp; <span id="t-iva">$0.00</span>
                     </td>
                 </tr>
                 <tr>
                     <td>Envío <span class="tenue">(sin IVA)</span></td>
-                    <td><input id="envio" class="num" inputmode="decimal" placeholder="0.00"></td>
+                    <td><input id="envio" aria-label="Costo de envío" class="num" inputmode="decimal" placeholder="0.00"></td>
                 </tr>
                 <tr class="total"><td>TOTAL</td><td id="t-total">$0.00</td></tr>
             </table>

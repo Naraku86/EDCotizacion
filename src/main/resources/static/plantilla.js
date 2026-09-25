@@ -10,8 +10,7 @@
     const PLANTILLA = JSON.parse(DATOS.plantilla);
     const GENERICO = JSON.parse(DATOS.generico);
     const EJEMPLOS = JSON.parse(DATOS.ejemplos);
-    const base = () => $('.barra .logo').getAttribute('href').replace(/\/?$/, '/');
-    const URL_PLANTILLA = base() + 'configuracion/plantilla';
+    const URL_PLANTILLA = DATOS.url;
 
     const csrf = () => {
         const t = $('meta[name=_csrf]');
@@ -192,8 +191,16 @@
     }
 
     function ajustarZoom() {
-        const ancho = datos.diseno.papel === 'a4' ? 793 : 816;
-        host.style.zoom = Math.min(1, ($('#lienzo').clientWidth - 48) / ancho).toFixed(3);
+        const hoja = raiz.querySelector('.hoja');
+        if (!hoja) return;
+        const lienzo = $('#lienzo');
+        const estilo = getComputedStyle(lienzo);
+        const ancho = lienzo.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight);
+        const alto = lienzo.clientHeight - parseFloat(estilo.paddingTop) - parseFloat(estilo.paddingBottom);
+        const modo = $('#zoom').value;
+        const escala = modo === 'pagina' ? Math.min(1, ancho / hoja.offsetWidth, alto / hoja.offsetHeight)
+            : modo === 'ancho' ? Math.min(1, ancho / hoja.offsetWidth) : Number(modo);
+        host.style.zoom = Math.max(0.1, escala).toFixed(3);
     }
 
     const leer = (el) => {
@@ -489,7 +496,8 @@
     window.addEventListener('beforeunload', (e) => {
         if (historial[pos] !== guardado) e.preventDefault();
     });
-    window.addEventListener('resize', ajustarZoom);
+    $('#zoom').addEventListener('change', ajustarZoom);
+    new ResizeObserver(ajustarZoom).observe($('#lienzo'));
 
     estado();
     $('#estado').textContent = 'Sin cambios';

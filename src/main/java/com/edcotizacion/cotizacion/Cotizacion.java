@@ -18,9 +18,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+
+import com.edcotizacion.empresa.Emisor;
 
 @Entity
 @Table(name = "cotizacion")
@@ -29,6 +33,11 @@ public class Cotizacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** Empresa emisora: el PDF sale con sus datos y su plantilla actual. */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private Emisor empresa;
 
     @Column(nullable = false, unique = true, updatable = false)
     private String folio;
@@ -127,6 +136,8 @@ public class Cotizacion {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public Emisor getEmpresa() { return empresa; }
+    public void setEmpresa(Emisor empresa) { this.empresa = Objects.requireNonNull(empresa); }
     public Long getId() { return id; }
     public String getFolio() { return folio; }
     public void setFolio(String folio) { this.folio = folio; }

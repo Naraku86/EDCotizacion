@@ -120,15 +120,15 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="col-n"></td>
-            <td><div class="ac"><input data-k="descripcion" autocomplete="off" placeholder="Busca o escribe un producto nuevo…"></div></td>
-            <td class="col-cant"><input data-k="cantidad" class="num" inputmode="decimal"></td>
-            <td class="col-costo interno"><input data-k="costo" class="num" inputmode="decimal" placeholder="0.00"></td>
-            <td class="col-pct interno"><input data-k="pct" class="num" inputmode="decimal"></td>
-            <td class="col-precio"><input data-k="precio" class="num" inputmode="decimal" placeholder="0.00"></td>
-            <td class="col-iva"><input data-k="precioIva" class="num" inputmode="decimal" placeholder="0.00"></td>
+            <td><div class="ac"><input aria-label="Producto o descripción" data-k="descripcion" autocomplete="off" placeholder="Busca o escribe un producto nuevo…"></div></td>
+            <td class="col-cant"><input aria-label="Cantidad" data-k="cantidad" class="num" inputmode="decimal"></td>
+            <td class="col-costo interno"><input aria-label="Costo unitario" data-k="costo" class="num" inputmode="decimal" placeholder="0.00"></td>
+            <td class="col-pct interno"><input aria-label="Porcentaje de ganancia" data-k="pct" class="num" inputmode="decimal"></td>
+            <td class="col-precio"><input aria-label="Precio unitario" data-k="precio" class="num" inputmode="decimal" placeholder="0.00"></td>
+            <td class="col-iva"><input aria-label="Precio con IVA" data-k="precioIva" class="num" inputmode="decimal" placeholder="0.00"></td>
             <td class="col-imp calc" data-k="importe"></td>
             <td class="col-gan calc interno" data-k="ganancia"></td>
-            <td class="col-x"><button type="button" class="quitar" title="Quitar">✕</button></td>`;
+            <td class="col-x"><button type="button" class="quitar" title="Quitar producto" aria-label="Quitar producto">✕</button></td>`;
         const f = (k) => tr.querySelector(`[data-k="${k}"]`);
         tbody.appendChild(tr);
 
@@ -275,6 +275,7 @@
         const cliente = { nombre: $('#cliente').value.trim() };
         camposCliente.forEach((k) => { cliente[k] = $('#cl-' + k).value.trim(); });
         return {
+            empresaId: Number($('#empresaId').value),
             fecha: $('#fecha').value,
             vigenciaDias: num($('#vigencia')) ?? 0,
             cliente,
@@ -336,6 +337,7 @@
     // ---------- inicio ----------
 
     llenarCliente(COT.cliente || {});
+    $('#empresaId').value = COT.empresaId;
     $('#fecha').value = COT.fecha;
     $('#vigencia').value = COT.vigenciaDias;
     $('#aplicaIva').checked = COT.aplicaIva;
@@ -344,6 +346,7 @@
     ['formaPago', 'tiempoEntrega', 'garantia', 'observaciones'].forEach((k) => { $('#' + k).value = COT[k] || ''; });
     (COT.partidas && COT.partidas.length ? COT.partidas : [{}]).forEach((p) => agregarPartida(p));
 
+    $('#empresaId').addEventListener('change', marcarCambio);
     $('#agregar').addEventListener('click', () => agregarPartida().querySelector('[data-k="descripcion"]').focus());
     $('#aplicaIva').addEventListener('change', alCambiarIva);
     $('#tasaIva').addEventListener('input', () => { [...tbody.children].forEach(actualizarPrecioIva); recalcular(); });

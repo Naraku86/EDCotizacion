@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,31 +12,28 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.edcotizacion.config.ConfigService;
+import com.edcotizacion.empresa.EmisorService;
 
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Diseño del PDF y datos de la empresa. Ambos viven en la tabla config; si nunca se ha
- * guardado un diseño se usa el genérico incluido en el jar (pdf/diseno-generico.json).
+ * Diseño del PDF y datos de cada empresa emisora. Un diseño vacío usa el genérico del jar
+ * (pdf/diseno-generico.json).
  */
 @Service
 public class DisenoService {
 
-    public static final String DISENO = "plantilla.diseno";
-    private static final String EMPRESA = "empresa.";
-
-    private final ConfigService config;
+    private final EmisorService emisores;
     private final JsonMapper json;
 
-    public DisenoService(ConfigService config, JsonMapper json) {
-        this.config = config;
+    public DisenoService(EmisorService emisores, JsonMapper json) {
+        this.emisores = emisores;
         this.json = json;
     }
 
-    public Diseno diseno() {
-        String v = config.get(DISENO);
-        return normalizar(v.isBlank() ? Map.of() : leer(v));
+    @Transactional(readOnly = true)
+    public Diseno diseno(long empresaId) {
+        return normalizar(leer(emisores.obtener(empresaId).getDiseno()));
     }
 
     public Map<String, Object> generico() {
@@ -61,22 +57,16 @@ public class DisenoService {
         return json.convertValue(mezclar(generico(), d), Diseno.class);
     }
 
-    public Empresa empresa() {
-        Map<String, String> m = new HashMap<>();
-        for (String campo : Empresa.CAMPOS) {
-            String v = config.get(EMPRESA + campo).trim();
-            m.put(campo, v.isEmpty() ? null : v);
-        }
-        return json.convertValue(m, Empresa.class);
+    @Transactional(readOnly = true)
+    public Empresa empresa(long empresaId) {
+        return json.readValue(emisores.obtener(empresaId).getDatos(), Empresa.class);
     }
 
+    /** Guarda el diseño y los datos de una empresa; su nombre sale de los datos. */
     @Transactional
-    public void guardar(Map<String, Object> diseno, Empresa empresa) {
-        config.set(DISENO, json.writeValueAsString(normalizar(diseno)));
-        Map<?, ?> m = json.convertValue(empresa, Map.class);
-        for (String campo : Empresa.CAMPOS) {
-            config.set(EMPRESA + campo, Objects.toString(m.get(campo), "").trim());
-        }
+    public void guardar(long empresaId, Map<String, Object> diseno, Empresa empresa) {
+        emisores.obtener(empresaId).actualizar(empresa.nombre(),
+                json.writeValueAsString(empresa), json.writeValueAsString(normalizar(diseno)));
     }
 
     /** Copia profunda de base con los valores de encima (los mapas se mezclan, lo demás se reemplaza). */

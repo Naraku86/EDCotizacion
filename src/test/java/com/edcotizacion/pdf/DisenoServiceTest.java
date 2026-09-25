@@ -10,13 +10,13 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.edcotizacion.config.ConfigService;
+import com.edcotizacion.empresa.EmisorService;
 
 import tools.jackson.databind.json.JsonMapper;
 
 class DisenoServiceTest {
 
-    private final DisenoService service = new DisenoService(mock(ConfigService.class), JsonMapper.builder().build());
+    private final DisenoService service = new DisenoService(mock(EmisorService.class), JsonMapper.builder().build());
 
     @Test
     void completaConElGenericoYValida() {

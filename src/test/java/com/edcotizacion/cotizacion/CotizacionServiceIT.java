@@ -46,7 +46,7 @@ class CotizacionServiceIT extends PruebaIntegracion {
     }
 
     private static CotizacionForm form(String cliente, PartidaForm... partidas) {
-        return new CotizacionForm(LocalDate.of(2026, 9, 25), 15,
+        return new CotizacionForm(1L, LocalDate.of(2026, 9, 25), 15,
                 new DatosCliente(cliente, "Contacto", null, null, null, null),
                 true, d("16"), null, "50% anticipo", null, null, null, List.of(partidas));
     }

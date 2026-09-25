@@ -3,56 +3,66 @@
 <head th:replace="~{fragmentos :: head('Configuración')}"></head>
 <body>
 <header th:replace="~{fragmentos :: barra('config')}"></header>
-<main style="max-width: 900px">
+<main id="contenido" class="pagina-configuracion">
     <h1>Configuración</h1>
 
     <div class="aviso ok" th:if="${mensaje}" th:text="${mensaje}"></div>
 
+    <div class="aviso error" role="alert" th:if="${error}" th:text="${error}"></div>
     <section class="tarjeta">
-        <h2>Plantilla del PDF</h2>
-        <p style="margin-top: 0">
-            Tu empresa, logo, colores y textos del PDF. Eliges una plantilla de ejemplo y
-            escribes directo sobre la hoja.
-        </p>
-        <div class="botonera" style="justify-content: flex-start">
-            <a class="btn primario" th:href="@{/configuracion/plantilla}">Editar plantilla</a>
-            <a class="btn" th:href="@{/configuracion/plantilla/muestra.pdf}" target="_blank">Ver PDF de muestra</a>
+        <h2>Empresas y plantillas</h2>
+        <p class="tenue">Cada empresa tiene sus propios datos, logo y diseño de cotización.</p>
+        <div class="empresa-fila" th:each="e : ${empresas}">
+            <strong th:text="${e.nombre}">Mi Empresa</strong>
+            <div class="botonera">
+                <a class="btn chico" th:href="@{/configuracion/empresas/{id}/plantilla(id=${e.id})}">Editar datos y plantilla</a>
+                <a class="btn chico" th:href="@{/configuracion/empresas/{id}/plantilla/muestra.pdf(id=${e.id})}" target="_blank">Ver PDF</a>
+            </div>
         </div>
+        <form class="empresa-alta" method="post" th:action="@{/configuracion/empresas}">
+            <div>
+                <label for="empresa-nombre">Agregar empresa</label>
+                <input id="empresa-nombre" name="nombre" maxlength="200" required placeholder="Nombre de la nueva empresa">
+            </div>
+            <button class="btn primario">+ Agregar empresa</button>
+        </form>
     </section>
 
+    <h2>Preferencias compartidas</h2>
+    <p class="tenue">Los valores iniciales, las condiciones y la numeración de folios se comparten entre todas las empresas.</p>
     <form method="post" th:action="@{/configuracion}">
         <section class="tarjeta">
             <h2>Valores por defecto de cada cotización nueva</h2>
-            <div class="fila" style="grid-template-columns: repeat(3, 1fr)">
+            <div class="fila c-tres">
                 <div>
-                    <label>% de ganancia sugerido</label>
-                    <input name="ganancia.default" class="num" th:value="${cfg['ganancia.default']}">
+                    <label for="ganancia.default">% de ganancia sugerido</label>
+                    <input id="ganancia.default" name="ganancia.default" class="num" th:value="${cfg['ganancia.default']}">
                 </div>
                 <div>
-                    <label>IVA (%)</label>
-                    <input name="iva.tasa" class="num" th:value="${cfg['iva.tasa']}">
+                    <label for="iva.tasa">IVA (%)</label>
+                    <input id="iva.tasa" name="iva.tasa" class="num" th:value="${cfg['iva.tasa']}">
                 </div>
                 <div>
-                    <label>Vigencia (días)</label>
-                    <input name="vigencia.default" class="num" th:value="${cfg['vigencia.default']}">
+                    <label for="vigencia.default">Vigencia (días)</label>
+                    <input id="vigencia.default" name="vigencia.default" class="num" th:value="${cfg['vigencia.default']}">
                 </div>
             </div>
         </section>
 
         <section class="tarjeta">
             <h2>Folio</h2>
-            <div class="fila" style="grid-template-columns: repeat(3, 1fr)">
+            <div class="fila c-tres">
                 <div>
-                    <label>Prefijo</label>
-                    <input name="folio.prefijo" th:value="${cfg['folio.prefijo']}">
+                    <label for="folio.prefijo">Prefijo</label>
+                    <input id="folio.prefijo" name="folio.prefijo" th:value="${cfg['folio.prefijo']}">
                 </div>
                 <div>
-                    <label>Siguiente número</label>
-                    <input name="folio.siguiente" type="number" min="1" class="num" th:value="${cfg['folio.siguiente']}">
+                    <label for="folio.siguiente">Siguiente número</label>
+                    <input id="folio.siguiente" name="folio.siguiente" type="number" min="1" class="num" th:value="${cfg['folio.siguiente']}">
                 </div>
                 <div>
-                    <label>El siguiente folio será</label>
-                    <input disabled th:value="${folioSiguiente}">
+                    <label for="folio-preview">El siguiente folio será</label>
+                    <input id="folio-preview" disabled th:value="${folioSiguiente}">
                 </div>
             </div>
         </section>
@@ -60,10 +70,10 @@
         <section class="tarjeta">
             <h2>Condiciones comerciales por defecto</h2>
             <div class="fila c-cond">
-                <div><label>Forma de pago</label><textarea name="condicion.forma_pago" rows="2" th:text="${cfg['condicion.forma_pago']}"></textarea></div>
-                <div><label>Tiempo de entrega</label><textarea name="condicion.tiempo_entrega" rows="2" th:text="${cfg['condicion.tiempo_entrega']}"></textarea></div>
-                <div><label>Garantía</label><textarea name="condicion.garantia" rows="2" th:text="${cfg['condicion.garantia']}"></textarea></div>
-                <div><label>Observaciones</label><textarea name="condicion.observaciones" rows="2" th:text="${cfg['condicion.observaciones']}"></textarea></div>
+                <div><label for="condicion.forma_pago">Forma de pago</label><textarea id="condicion.forma_pago" name="condicion.forma_pago" rows="2" th:text="${cfg['condicion.forma_pago']}"></textarea></div>
+                <div><label for="condicion.tiempo_entrega">Tiempo de entrega</label><textarea id="condicion.tiempo_entrega" name="condicion.tiempo_entrega" rows="2" th:text="${cfg['condicion.tiempo_entrega']}"></textarea></div>
+                <div><label for="condicion.garantia">Garantía</label><textarea id="condicion.garantia" name="condicion.garantia" rows="2" th:text="${cfg['condicion.garantia']}"></textarea></div>
+                <div><label for="condicion.observaciones">Observaciones</label><textarea id="condicion.observaciones" name="condicion.observaciones" rows="2" th:text="${cfg['condicion.observaciones']}"></textarea></div>
             </div>
         </section>
 

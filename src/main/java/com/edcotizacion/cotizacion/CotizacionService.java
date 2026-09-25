@@ -18,6 +18,7 @@ import com.edcotizacion.cliente.ClienteService;
 import com.edcotizacion.comun.Busqueda;
 import com.edcotizacion.comun.NoEncontradoException;
 import com.edcotizacion.config.ConfigService;
+import com.edcotizacion.empresa.EmisorService;
 import com.edcotizacion.producto.ProductoService;
 
 @Service
@@ -27,19 +28,22 @@ public class CotizacionService {
     private final ClienteService clientes;
     private final ProductoService productos;
     private final ConfigService config;
+    private final EmisorService emisores;
 
     public CotizacionService(CotizacionRepository cotizaciones, ClienteService clientes,
-            ProductoService productos, ConfigService config) {
+            ProductoService productos, ConfigService config, EmisorService emisores) {
         this.cotizaciones = cotizaciones;
         this.clientes = clientes;
         this.productos = productos;
         this.config = config;
+        this.emisores = emisores;
     }
 
     /** Cotización en blanco con los valores por defecto de Configuración (no se guarda). */
     @Transactional(readOnly = true)
     public Cotizacion nueva() {
         Cotizacion c = new Cotizacion();
+        c.setEmpresa(emisores.predeterminada());
         c.setFecha(LocalDate.now());
         c.setVigenciaDias(config.getInt(ConfigService.VIGENCIA_DEFAULT));
         c.setTasaIva(config.getDecimal(ConfigService.IVA_TASA));
@@ -60,9 +64,13 @@ public class CotizacionService {
     /** Lista para la pantalla principal (sin partidas). Busca en folio, cliente y productos. */
     @Transactional(readOnly = true)
     public List<Cotizacion> buscar(String texto, Estado estado) {
-        List<Cotizacion> lista = estado == null
-                ? cotizaciones.findAllByOrderByIdDesc()
-                : cotizaciones.findByEstadoOrderByIdDesc(estado);
+        return buscar(texto, estado, null);
+    }
+
+    /** Igual que buscar(texto, estado), solo las de una empresa emisora (null = todas). */
+    @Transactional(readOnly = true)
+    public List<Cotizacion> buscar(String texto, Estado estado, Long empresaId) {
+        List<Cotizacion> lista = cotizaciones.filtrar(estado, empresaId);
         if (texto == null || texto.isBlank()) {
             return lista;
         }
@@ -84,6 +92,7 @@ public class CotizacionService {
     @Transactional
     public long guardar(Long id, CotizacionForm f) {
         Cotizacion c = id == null ? new Cotizacion() : obtener(id);
+        c.setEmpresa(emisores.obtener(f.empresaId()));
         c.setFecha(f.fecha());
         c.setVigenciaDias(f.vigenciaDias());
         c.setCliente(f.cliente());
@@ -133,7 +142,7 @@ public class CotizacionService {
     @Transactional
     public long duplicar(long id) {
         CotizacionForm copia = CotizacionForm.de(obtener(id));
-        return guardar(null, new CotizacionForm(LocalDate.now(), copia.vigenciaDias(), copia.cliente(),
+        return guardar(null, new CotizacionForm(copia.empresaId(), LocalDate.now(), copia.vigenciaDias(), copia.cliente(),
                 copia.aplicaIva(), copia.tasaIva(), copia.envio(), copia.formaPago(), copia.tiempoEntrega(),
                 copia.garantia(), copia.observaciones(), copia.partidas()));
     }

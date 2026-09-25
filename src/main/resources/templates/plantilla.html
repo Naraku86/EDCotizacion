@@ -4,8 +4,16 @@
 <body class="editor-pagina">
 <header th:replace="~{fragmentos :: barra('config')}"></header>
 
-<div class="ed-barra">
-    <a class="btn chico" th:href="@{/configuracion}">← Configuración</a>
+<main id="contenido" class="ed-editor" tabindex="-1">
+<header class="ed-cabecera">
+    <div>
+        <a class="ed-volver" th:href="@{/configuracion}">← Configuración</a>
+        <h1>Plantilla de <span th:text="${emisor.nombre}">Mi Empresa</span></h1>
+        <p>Personaliza la plantilla y haz clic en los textos de la hoja para editarlos.</p>
+    </div>
+    <span id="estado" class="ed-estado" role="status">Sin cambios</span>
+</header>
+<div class="ed-barra" role="group" aria-label="Herramientas de la plantilla">
     <div class="ed-herramientas">
         <button id="btnPlantillas" class="btn">▦ Plantillas</button>
         <div class="ed-menu-cont">
@@ -21,7 +29,15 @@
             <div id="menuOpciones" class="ed-menu" hidden></div>
         </div>
     </div>
-    <span id="estado" class="tenue">Sin cambios</span>
+    <div class="ed-vista">
+        <label for="zoom">Vista</label>
+        <select id="zoom">
+            <option value="pagina">Página completa</option>
+            <option value="ancho">Ajustar al ancho</option>
+            <option value="0.75">75 %</option>
+            <option value="1">100 %</option>
+        </select>
+    </div>
     <div class="ed-acciones">
         <button id="deshacer" class="btn" title="Deshacer (Ctrl+Z)" disabled>↶</button>
         <button id="rehacer" class="btn" title="Rehacer (Ctrl+Y)" disabled>↷</button>
@@ -30,11 +46,11 @@
     </div>
 </div>
 
-<section id="lienzo" class="ed-lienzo">
-    <p class="ed-ayuda">Haz clic en cualquier texto de la hoja para cambiarlo. Lo que dejes vacío no sale en el PDF.
-        Los productos, el cliente y los totales son de ejemplo: salen de cada cotización.</p>
+<section id="lienzo" class="ed-lienzo" aria-label="Vista previa editable de la cotización" tabindex="0">
     <div id="hoja-host"></div>
 </section>
+<p class="ed-ayuda">Cliente, productos e importes de ejemplo. Los campos que dejes vacíos no aparecerán en el PDF.</p>
+</main>
 
 <div id="galeria" class="ed-modal" hidden>
     <div class="ed-modal-caja">
@@ -52,12 +68,12 @@
 </div>
 
 <input id="archivoLogo" type="file" accept="image/*" hidden>
-<form id="formPdf" method="post" th:action="@{/configuracion/plantilla/muestra.pdf}" target="_blank" hidden>
+<form id="formPdf" method="post" th:action="@{${plantillaUrl + '/muestra.pdf'}}" target="_blank" hidden>
     <input type="hidden" name="datos">
 </form>
 
 <!-- datos para plantilla.js (sin scripts en línea: la CSP solo permite archivos .js) -->
-<div id="datos" hidden th:data-plantilla="${datosJson}" th:data-generico="${genericoJson}"
+<div id="datos" hidden th:data-url="@{${plantillaUrl}}" th:data-plantilla="${datosJson}" th:data-generico="${genericoJson}"
      th:data-ejemplos="${ejemplosJson}"></div>
 <script th:src="@{/plantilla.js}"></script>
 </body>
