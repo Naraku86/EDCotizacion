@@ -22,5 +22,12 @@ spring:
       maximum-pool-size: 1
   flyway:
     locations: classpath:db/migration
+  jpa:
+    # Flyway crea y migra las tablas; Hibernate solo las usa
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    # las consultas terminan en el servicio, no mientras se dibuja la página
+    open-in-view: false
   thymeleaf:
     cache: false

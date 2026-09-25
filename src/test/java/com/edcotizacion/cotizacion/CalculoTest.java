@@ -3,6 +3,7 @@ package com.edcotizacion.cotizacion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,12 +14,14 @@ class CalculoTest {
     }
 
     private static Partida partida(String cantidad, String costo, String precio) {
-        Partida p = new Partida();
-        p.setDescripcion("x");
-        p.setCantidad(d(cantidad));
-        p.setCosto(costo == null ? null : d(costo));
-        p.setPrecioUnitario(d(precio));
-        return p;
+        return new Partida("x", d(cantidad), costo == null ? null : d(costo), d(precio));
+    }
+
+    private static Cotizacion cotizacion(Partida... partidas) {
+        Cotizacion c = new Cotizacion();
+        c.setTasaIva(d("16"));
+        c.reemplazarPartidas(List.of(partidas));
+        return c;
     }
 
     @Test
@@ -32,21 +35,15 @@ class CalculoTest {
         BigDecimal precio = Montos.precioSinIva(d("1000"), d("16"));
         assertEquals(d("862.07"), precio);
 
-        Cotizacion c = new Cotizacion();
-        c.setTasaIva(d("16"));
-        c.getPartidas().add(partida("1", null, precio.toPlainString()));
+        Cotizacion c = cotizacion(partida("1", null, precio.toPlainString()));
         CotizacionService.calcular(c);
         assertEquals(d("1000.00"), c.getTotal());
     }
 
     @Test
     void envioNoLlevaIva() {
-        Cotizacion c = new Cotizacion();
-        c.setTasaIva(d("16"));
+        Cotizacion c = cotizacion(partida("1", "7077", "9200"), partida("1", "100", "130"), partida("1", null, "862.07"));
         c.setEnvio(d("150"));
-        c.getPartidas().add(partida("1", "7077", "9200"));
-        c.getPartidas().add(partida("1", "100", "130"));
-        c.getPartidas().add(partida("1", null, "862.07"));
         CotizacionService.calcular(c);
 
         assertEquals(d("10192.07"), c.getSubtotal());
@@ -56,10 +53,8 @@ class CalculoTest {
 
     @Test
     void sinIva() {
-        Cotizacion c = new Cotizacion();
-        c.setTasaIva(d("16"));
+        Cotizacion c = cotizacion(partida("2", "100", "130"));
         c.setAplicaIva(false);
-        c.getPartidas().add(partida("2", "100", "130"));
         CotizacionService.calcular(c);
 
         assertEquals(d("0.00"), c.getIva());
@@ -69,9 +64,7 @@ class CalculoTest {
     @Test
     void totalSiempreConDosDecimales() {
         // En el PDF original salía $10,669.682
-        Cotizacion c = new Cotizacion();
-        c.setTasaIva(d("16"));
-        c.getPartidas().add(partida("1", null, "9198"));
+        Cotizacion c = cotizacion(partida("1", null, "9198"));
         CotizacionService.calcular(c);
 
         assertEquals(d("1471.68"), c.getIva());
@@ -81,11 +74,8 @@ class CalculoTest {
 
     @Test
     void porcentajeDeGananciaReal() {
-        Cotizacion c = new Cotizacion();
-        c.setTasaIva(d("16"));
         Partida p = partida("3", "1450", "1885");
-        c.getPartidas().add(p);
-        CotizacionService.calcular(c);
+        CotizacionService.calcular(cotizacion(p));
 
         assertEquals(d("30.00"), p.getPctGanancia());
         assertEquals(d("1305.00"), p.getGanancia());

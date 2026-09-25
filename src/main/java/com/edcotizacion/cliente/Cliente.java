@@ -2,15 +2,49 @@ package com.edcotizacion.cliente;
 
 import com.edcotizacion.cotizacion.DatosCliente;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+/** Catálogo de clientes: se da de alta solo al guardar una cotización con un nombre nuevo. */
+@Entity
+@Table(name = "cliente")
 public class Cliente {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** Único sin distinguir mayúsculas (COLLATE NOCASE en la tabla). */
+    @Column(nullable = false, unique = true)
     private String nombre;
+
     private String contacto;
     private String telefono;
     private String email;
     private String rfc;
     private String direccion;
+
+    protected Cliente() {
+        // JPA
+    }
+
+    public Cliente(DatosCliente d) {
+        this.nombre = d.nombre();
+        actualizarCon(d);
+    }
+
+    /** Toma solo los datos que vienen capturados; lo vacío no borra lo que ya se tenía. */
+    public void actualizarCon(DatosCliente d) {
+        if (d.contacto() != null) contacto = d.contacto();
+        if (d.telefono() != null) telefono = d.telefono();
+        if (d.email() != null) email = d.email();
+        if (d.rfc() != null) rfc = d.rfc();
+        if (d.direccion() != null) direccion = d.direccion();
+    }
 
     /** Datos para el formulario (autocompletado). */
     public DatosCliente datos() {
@@ -18,17 +52,6 @@ public class Cliente {
     }
 
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
     public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
     public String getContacto() { return contacto; }
-    public void setContacto(String contacto) { this.contacto = contacto; }
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getRfc() { return rfc; }
-    public void setRfc(String rfc) { this.rfc = rfc; }
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
 }

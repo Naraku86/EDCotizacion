@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,60 +21,55 @@ public class UsuarioService implements UserDetailsService, ApplicationRunner {
     public static final String USUARIO_DEFAULT = "admin";
     public static final String PASSWORD_DEFAULT = "admin";
 
-    private final JdbcClient jdbc;
+    private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
 
-    public UsuarioService(JdbcClient jdbc, PasswordEncoder encoder) {
-        this.jdbc = jdbc;
+    public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder) {
+        this.usuarios = usuarios;
         this.encoder = encoder;
     }
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) {
-        if (jdbc.sql("SELECT COUNT(*) FROM usuario").query(Integer.class).single() == 0) {
-            jdbc.sql("INSERT INTO usuario (nombre, password, por_defecto) VALUES (?, ?, 1)")
-                    .params(USUARIO_DEFAULT, encoder.encode(PASSWORD_DEFAULT)).update();
+        if (usuarios.count() == 0) {
+            usuarios.save(new Usuario(USUARIO_DEFAULT, encoder.encode(PASSWORD_DEFAULT), true));
             log.info("Usuario inicial creado: {} / {} (cámbialo en Cuenta)", USUARIO_DEFAULT, PASSWORD_DEFAULT);
         }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String nombre) {
-        return jdbc.sql("SELECT nombre, password FROM usuario WHERE nombre = ?")
-                .param(nombre)
-                .query((rs, i) -> User.withUsername(rs.getString(1)).password(rs.getString(2)).build())
-                .optional()
-                .orElseThrow(() -> new UsernameNotFoundException(nombre));
+        return usuarios.findByNombre(nombre)
+                .map(u -> User.withUsername(u.getNombre()).password(u.getPassword()).build())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
 
     /** true mientras alguien siga entrando con la contraseña de fábrica. */
+    @Transactional(readOnly = true)
     public boolean hayPasswordDefault() {
-        return jdbc.sql("SELECT COUNT(*) FROM usuario WHERE por_defecto = 1").query(Integer.class).single() > 0;
+        return usuarios.existsByPorDefectoTrue();
     }
 
     /** Cambia usuario y contraseña. Lanza IllegalArgumentException con un mensaje para mostrar. */
     @Transactional
     public void cambiar(String actual, String passwordActual, String nuevoNombre, String nuevoPassword) {
-        String hash = jdbc.sql("SELECT password FROM usuario WHERE nombre = ?").param(actual)
-                .query(String.class).optional().orElse(null);
-        if (hash == null || !encoder.matches(passwordActual, hash)) {
+        Usuario u = usuarios.findByNombre(actual).orElse(null);
+        if (u == null || !encoder.matches(passwordActual, u.getPassword())) {
             throw new IllegalArgumentException("La contraseña actual no es correcta.");
         }
-        nuevoNombre = nuevoNombre == null ? "" : nuevoNombre.trim();
+        nuevoNombre = nuevoNombre == null ? "" : nuevoNombre.strip();
         if (nuevoNombre.isEmpty()) {
             throw new IllegalArgumentException("El usuario no puede quedar vacío.");
         }
         if (nuevoPassword == null || nuevoPassword.length() < 4) {
             throw new IllegalArgumentException("La contraseña nueva debe tener al menos 4 caracteres.");
         }
-        if (!nuevoNombre.equalsIgnoreCase(actual) && jdbc.sql("SELECT COUNT(*) FROM usuario WHERE nombre = ?")
-                .param(nuevoNombre).query(Integer.class).single() > 0) {
+        if (!nuevoNombre.equalsIgnoreCase(actual) && usuarios.existsByNombre(nuevoNombre)) {
             throw new IllegalArgumentException("Ya existe un usuario con ese nombre.");
         }
-        jdbc.sql("UPDATE usuario SET nombre = ?, password = ?, por_defecto = ? WHERE nombre = ?")
-                .params(nuevoNombre, encoder.encode(nuevoPassword),
-                        USUARIO_DEFAULT.equalsIgnoreCase(nuevoNombre) && PASSWORD_DEFAULT.equals(nuevoPassword) ? 1 : 0,
-                        actual)
-                .update();
+        boolean deFabrica = USUARIO_DEFAULT.equalsIgnoreCase(nuevoNombre) && PASSWORD_DEFAULT.equals(nuevoPassword);
+        u.cambiar(nuevoNombre, encoder.encode(nuevoPassword), deFabrica);
     }
 }

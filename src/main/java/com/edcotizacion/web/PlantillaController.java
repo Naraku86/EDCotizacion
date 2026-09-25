@@ -3,6 +3,7 @@ package com.edcotizacion.web;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
@@ -99,19 +100,16 @@ public class PlantillaController {
         c.setFecha(LocalDate.now());
         c.setCliente(new DatosCliente("Cliente de ejemplo S.A. de C.V.", "Juan Pérez", "55 1234 5678",
                 null, null, null));
-        c.getPartidas().add(partida("Producto de ejemplo con una descripción larga para ver cómo se acomoda el texto en dos renglones", "2", "1234.50"));
-        c.getPartidas().add(partida("Servicio de instalación y configuración", "1", "850.00"));
-        c.getPartidas().add(partida("Accesorio", "5", "99.90"));
+        c.reemplazarPartidas(List.of(
+                partida("Producto de ejemplo con una descripción larga para ver cómo se acomoda el texto en dos renglones", "2", "1234.50"),
+                partida("Servicio de instalación y configuración", "1", "850.00"),
+                partida("Accesorio", "5", "99.90")));
         c.setEnvio(new BigDecimal("250"));
         CotizacionService.calcular(c);
         return c;
     }
 
     private static Partida partida(String descripcion, String cantidad, String precio) {
-        Partida p = new Partida();
-        p.setDescripcion(descripcion);
-        p.setCantidad(new BigDecimal(cantidad));
-        p.setPrecioUnitario(new BigDecimal(precio));
-        return p;
+        return new Partida(descripcion, new BigDecimal(cantidad), null, new BigDecimal(precio));
     }
 }

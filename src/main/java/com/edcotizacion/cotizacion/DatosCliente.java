@@ -2,14 +2,17 @@ package com.edcotizacion.cotizacion;
 
 import static com.edcotizacion.comun.Textos.limpio;
 
+import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
  * Datos del cliente tal como quedaron en la cotización (una copia: si después cambia el
- * catálogo de clientes, la cotización impresa no cambia). También es lo que manda el formulario.
+ * catálogo de clientes, la cotización impresa no cambia). También es lo que manda el formulario
+ * y lo que devuelve el autocompletado.
  */
+@Embeddable
 public record DatosCliente(
         @NotBlank(message = "Captura el nombre del cliente.")
         @Size(max = 200, message = "El nombre del cliente es demasiado largo.") String nombre,

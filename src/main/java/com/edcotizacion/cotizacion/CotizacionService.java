@@ -6,35 +6,38 @@ import static com.edcotizacion.cotizacion.Montos.r2;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.edcotizacion.cliente.ClienteRepository;
+import com.edcotizacion.cliente.ClienteService;
+import com.edcotizacion.comun.Busqueda;
 import com.edcotizacion.comun.NoEncontradoException;
 import com.edcotizacion.config.ConfigService;
-import com.edcotizacion.producto.ProductoRepository;
+import com.edcotizacion.producto.ProductoService;
 
 @Service
 public class CotizacionService {
 
     private final CotizacionRepository cotizaciones;
-    private final ClienteRepository clientes;
-    private final ProductoRepository productos;
+    private final ClienteService clientes;
+    private final ProductoService productos;
     private final ConfigService config;
 
-    public CotizacionService(CotizacionRepository cotizaciones, ClienteRepository clientes,
-            ProductoRepository productos, ConfigService config) {
+    public CotizacionService(CotizacionRepository cotizaciones, ClienteService clientes,
+            ProductoService productos, ConfigService config) {
         this.cotizaciones = cotizaciones;
         this.clientes = clientes;
         this.productos = productos;
         this.config = config;
     }
 
-    /** Cotización en blanco con los valores por defecto de Configuración. */
+    /** Cotización en blanco con los valores por defecto de Configuración (no se guarda). */
+    @Transactional(readOnly = true)
     public Cotizacion nueva() {
         Cotizacion c = new Cotizacion();
         c.setFecha(LocalDate.now());
@@ -47,13 +50,31 @@ public class CotizacionService {
         return c;
     }
 
+    /** Cotización con sus partidas. */
+    @Transactional(readOnly = true)
     public Cotizacion obtener(long id) {
-        return cotizaciones.porId(id)
+        return cotizaciones.findConPartidasById(id)
                 .orElseThrow(() -> new NoEncontradoException("No existe la cotización " + id));
     }
 
+    /** Lista para la pantalla principal (sin partidas). Busca en folio, cliente y productos. */
+    @Transactional(readOnly = true)
     public List<Cotizacion> buscar(String texto, Estado estado) {
-        return cotizaciones.buscar(texto, estado);
+        List<Cotizacion> lista = estado == null
+                ? cotizaciones.findAllByOrderByIdDesc()
+                : cotizaciones.findByEstadoOrderByIdDesc(estado);
+        if (texto == null || texto.isBlank()) {
+            return lista;
+        }
+        Map<Long, String> productosPorCotizacion = cotizaciones.textosDePartidas().stream()
+                .collect(Collectors.groupingBy(TextoPartida::cotizacionId,
+                        Collectors.mapping(TextoPartida::descripcion, Collectors.joining(" "))));
+        Busqueda b = new Busqueda(texto);
+        return lista.stream()
+                .filter(c -> b.coincide(c.getFolio() + " " + c.getCliente().nombre() + " "
+                        + Objects.toString(c.getCliente().contacto(), "") + " "
+                        + productosPorCotizacion.getOrDefault(c.getId(), "")))
+                .toList();
     }
 
     /**
@@ -66,7 +87,7 @@ public class CotizacionService {
         c.setFecha(f.fecha());
         c.setVigenciaDias(f.vigenciaDias());
         c.setCliente(f.cliente());
-        c.setClienteId(clientes.guardar(f.cliente()));
+        c.setClienteId(clientes.registrar(f.cliente()));
         c.setAplicaIva(f.aplicaIva());
         c.setTasaIva(f.tasaIva());
         c.setEnvio(f.envio());
@@ -74,11 +95,13 @@ public class CotizacionService {
         c.setTiempoEntrega(f.tiempoEntrega());
         c.setGarantia(f.garantia());
         c.setObservaciones(f.observaciones());
-        c.setPartidas(f.partidas().stream().map(CotizacionService::partida).collect(Collectors.toCollection(ArrayList::new)));
+        c.reemplazarPartidas(f.partidas().stream()
+                .map(p -> new Partida(p.descripcion(), p.cantidad(), p.costo(), p.precioUnitario()))
+                .toList());
 
         calcular(c);
         for (Partida p : c.getPartidas()) {
-            p.setProductoId(productos.guardar(p.getDescripcion(), p.getCosto(), p.getPrecioUnitario()));
+            p.setProductoId(productos.registrar(p.getDescripcion(), p.getCosto(), p.getPrecioUnitario()));
         }
 
         c.setModificada(LocalDateTime.now());
@@ -86,19 +109,8 @@ public class CotizacionService {
             c.setFolio(config.tomarFolio());
             c.setEstado(Estado.BORRADOR);
             c.setCreada(c.getModificada());
-            return cotizaciones.insertar(c);
         }
-        cotizaciones.actualizar(c);
-        return id;
-    }
-
-    private static Partida partida(CotizacionForm.PartidaForm f) {
-        Partida p = new Partida();
-        p.setDescripcion(f.descripcion());
-        p.setCantidad(f.cantidad());
-        p.setCosto(f.costo());
-        p.setPrecioUnitario(f.precioUnitario());
-        return p;
+        return cotizaciones.save(c).getId();
     }
 
     /** Recalcula importes y totales. El envío no lleva IVA. */
@@ -126,13 +138,16 @@ public class CotizacionService {
                 copia.garantia(), copia.observaciones(), copia.partidas()));
     }
 
+    @Transactional
     public void cambiarEstado(long id, Estado estado) {
-        obtener(id);
-        cotizaciones.cambiarEstado(id, estado);
+        Cotizacion c = cotizaciones.findById(id)
+                .orElseThrow(() -> new NoEncontradoException("No existe la cotización " + id));
+        c.setEstado(estado);
+        c.setModificada(LocalDateTime.now());
     }
 
+    @Transactional
     public void eliminar(long id) {
-        obtener(id);
-        cotizaciones.eliminar(id);
+        cotizaciones.delete(obtener(id));
     }
 }

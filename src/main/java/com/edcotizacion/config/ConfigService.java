@@ -4,9 +4,10 @@ import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.edcotizacion.cotizacion.CotizacionRepository;
 
 /** Valores por defecto guardados en la tabla config (clave/valor). */
 @Service
@@ -22,23 +23,24 @@ public class ConfigService {
     public static final String GARANTIA = "condicion.garantia";
     public static final String OBSERVACIONES = "condicion.observaciones";
 
-    private final JdbcClient jdbc;
+    private final ConfigRepository repo;
+    private final CotizacionRepository cotizaciones;
 
-    public ConfigService(JdbcClient jdbc) {
-        this.jdbc = jdbc;
+    public ConfigService(ConfigRepository repo, CotizacionRepository cotizaciones) {
+        this.repo = repo;
+        this.cotizaciones = cotizaciones;
     }
 
+    @Transactional(readOnly = true)
     public Map<String, String> todos() {
         Map<String, String> m = new LinkedHashMap<>();
-        jdbc.sql("SELECT clave, valor FROM config").query(rs -> {
-            m.put(rs.getString(1), rs.getString(2));
-        });
+        repo.findAll().forEach(c -> m.put(c.getClave(), c.getValor()));
         return m;
     }
 
+    @Transactional(readOnly = true)
     public String get(String clave) {
-        return jdbc.sql("SELECT valor FROM config WHERE clave = ?")
-                .param(clave).query(String.class).optional().orElse("");
+        return repo.findById(clave).map(Config::getValor).orElse("");
     }
 
     public BigDecimal getDecimal(String clave) {
@@ -51,21 +53,20 @@ public class ConfigService {
         return v.isBlank() ? 0 : Integer.parseInt(v.trim());
     }
 
+    @Transactional
     public void set(String clave, String valor) {
-        jdbc.sql("INSERT INTO config (clave, valor) VALUES (?, ?) "
-                + "ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor")
-                .params(clave, valor).update();
+        repo.findById(clave).ifPresentOrElse(c -> c.setValor(valor), () -> repo.save(new Config(clave, valor)));
     }
 
     /** Devuelve el siguiente folio libre (p. ej. COT-0003) y avanza el contador. */
     @Transactional
     public String tomarFolio() {
         int n = getInt(FOLIO_SIGUIENTE);
+        String prefijo = get(FOLIO_PREFIJO);
         String folio;
         do {
-            folio = get(FOLIO_PREFIJO) + String.format("%04d", n++);
-        } while (jdbc.sql("SELECT COUNT(*) FROM cotizacion WHERE folio = ?")
-                .param(folio).query(Integer.class).single() > 0);
+            folio = prefijo + String.format("%04d", n++);
+        } while (cotizaciones.existsByFolio(folio));
         set(FOLIO_SIGUIENTE, String.valueOf(n));
         return folio;
     }
