@@ -298,8 +298,8 @@
         const botones = [$('#guardar'), $('#guardar-pdf')];
         botones.forEach((b) => { b.disabled = true; });
         try {
-            const r = await fetch(base() + 'api/cotizaciones' + (COT.id ? '/' + COT.id : ''), {
-                method: COT.id ? 'PUT' : 'POST',
+            const r = await fetch(base() + 'api/cotizaciones' + (COT_ID ? '/' + COT_ID : ''), {
+                method: COT_ID ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', ...csrf() },
                 body: JSON.stringify(datos()),
             });
@@ -354,5 +354,5 @@
 
     alCambiarIva();
     cambios = false;
-    if (!COT.id) $('#cliente').focus();
+    if (!COT_ID) $('#cliente').focus();
 })();

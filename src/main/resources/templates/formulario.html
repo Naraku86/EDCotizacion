@@ -124,6 +124,7 @@
 
 <script th:inline="javascript">
     const COT = JSON.parse(/*[[${cotJson}]]*/ '{}');
+    const COT_ID = /*[[${cot.id}]]*/ null;
     const GANANCIA_DEFAULT = Number(/*[[${gananciaDefault}]]*/ 30);
 </script>
 <script th:src="@{/cotizacion.js}"></script>

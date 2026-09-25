@@ -53,8 +53,8 @@ public class PdfService {
         ctx.setVariable("c", c);
         ctx.setVariable("f", formato);
         ctx.setVariable("d", diseno);
-        ctx.setVariable("e", empresa.limpia());
-        ctx.setVariable("s", new Estilo(diseno.getColores()));
+        ctx.setVariable("e", empresa);
+        ctx.setVariable("s", new Estilo(diseno.colores()));
         ctx.setVariable("ed", editor);
         return engine.process("pdf/cotizacion", ctx);
     }
@@ -66,7 +66,7 @@ public class PdfService {
 
     /** COT-0001_Escuela_Primaria_Lic.pdf */
     public static String nombreArchivo(Cotizacion c) {
-        String cliente = Normalizer.normalize(c.getCliente().getNombre(), Normalizer.Form.NFD)
+        String cliente = Normalizer.normalize(c.getCliente().nombre(), Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
                 .replaceAll("[^A-Za-z0-9]+", "_")
                 .replaceAll("^_|_$", "");

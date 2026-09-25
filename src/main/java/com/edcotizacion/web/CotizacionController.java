@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.edcotizacion.config.ConfigService;
 import com.edcotizacion.cotizacion.Cotizacion;
+import com.edcotizacion.cotizacion.CotizacionForm;
 import com.edcotizacion.cotizacion.CotizacionService;
 import com.edcotizacion.cotizacion.Estado;
 import com.edcotizacion.pdf.PdfService;
@@ -58,7 +59,7 @@ public class CotizacionController {
 
     private String formulario(Cotizacion c, Model model) {
         model.addAttribute("cot", c);
-        model.addAttribute("cotJson", json.writeValueAsString(c));
+        model.addAttribute("cotJson", json.writeValueAsString(CotizacionForm.de(c)));
         model.addAttribute("gananciaDefault", config.getDecimal(ConfigService.GANANCIA_DEFAULT));
         return "formulario";
     }

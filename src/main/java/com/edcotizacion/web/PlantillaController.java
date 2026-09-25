@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,11 +19,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.edcotizacion.config.ConfigService;
 import com.edcotizacion.cotizacion.Cotizacion;
 import com.edcotizacion.cotizacion.CotizacionService;
+import com.edcotizacion.cotizacion.DatosCliente;
 import com.edcotizacion.cotizacion.Partida;
 import com.edcotizacion.pdf.DisenoService;
 import com.edcotizacion.pdf.Empresa;
 import com.edcotizacion.pdf.PdfService;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Editor de la plantilla del PDF: se edita directo sobre la hoja. */
@@ -33,7 +35,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class PlantillaController {
 
     /** Lo que edita la pantalla: el diseño y los datos de la empresa. */
-    public record Datos(Map<String, Object> diseno, Empresa empresa) {
+    public record Datos(@NotNull Map<String, Object> diseno, @NotNull @Valid Empresa empresa) {
     }
 
     private final DisenoService disenos;
@@ -66,13 +68,13 @@ public class PlantillaController {
      */
     @PostMapping(value = "/vista", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
-    public String vista(@RequestBody Datos d, @RequestParam(defaultValue = "false") boolean editor) {
+    public String vista(@Valid @RequestBody Datos d, @RequestParam(defaultValue = "false") boolean editor) {
         return pdf.html(muestra(), disenos.normalizar(d.diseno()), d.empresa(), editor);
     }
 
     @PostMapping
     @ResponseBody
-    public Map<String, Boolean> guardar(@RequestBody Datos d) {
+    public Map<String, Boolean> guardar(@Valid @RequestBody Datos d) {
         disenos.guardar(d.diseno(), d.empresa());
         return Map.of("ok", true);
     }
@@ -91,18 +93,12 @@ public class PlantillaController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(pdf.generar(muestra()));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> error(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-    }
-
     private Cotizacion muestra() {
         Cotizacion c = cotizaciones.nueva();
         c.setFolio(config.get(ConfigService.FOLIO_PREFIJO) + "0000");
         c.setFecha(LocalDate.now());
-        c.getCliente().setNombre("Cliente de ejemplo S.A. de C.V.");
-        c.getCliente().setContacto("Juan Pérez");
-        c.getCliente().setTelefono("55 1234 5678");
+        c.setCliente(new DatosCliente("Cliente de ejemplo S.A. de C.V.", "Juan Pérez", "55 1234 5678",
+                null, null, null));
         c.getPartidas().add(partida("Producto de ejemplo con una descripción larga para ver cómo se acomoda el texto en dos renglones", "2", "1234.50"));
         c.getPartidas().add(partida("Servicio de instalación y configuración", "1", "850.00"));
         c.getPartidas().add(partida("Accesorio", "5", "99.90"));

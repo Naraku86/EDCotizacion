@@ -1,5 +1,7 @@
 package com.edcotizacion.cliente;
 
+import com.edcotizacion.cotizacion.DatosCliente;
+
 public class Cliente {
 
     private Long id;
@@ -9,6 +11,11 @@ public class Cliente {
     private String email;
     private String rfc;
     private String direccion;
+
+    /** Datos para el formulario (autocompletado). */
+    public DatosCliente datos() {
+        return new DatosCliente(nombre, contacto, telefono, email, rfc, direccion);
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

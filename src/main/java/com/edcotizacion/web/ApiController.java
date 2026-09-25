@@ -3,8 +3,7 @@ package com.edcotizacion.web;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,15 +15,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.edcotizacion.cliente.Cliente;
 import com.edcotizacion.cliente.ClienteRepository;
-import com.edcotizacion.cotizacion.Cotizacion;
+import com.edcotizacion.cotizacion.CotizacionForm;
 import com.edcotizacion.cotizacion.CotizacionService;
-import com.edcotizacion.producto.Producto;
+import com.edcotizacion.cotizacion.DatosCliente;
 import com.edcotizacion.producto.ProductoRepository;
+import com.edcotizacion.producto.ProductoSugerencia;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 
 /** Autocompletado y guardado de cotizaciones desde el formulario. */
 @RestController
 @RequestMapping("/api")
+@Validated
 public class ApiController {
+
+    private static final int SUGERENCIAS = 10;
 
     private final ClienteRepository clientes;
     private final ProductoRepository productos;
@@ -37,29 +43,22 @@ public class ApiController {
     }
 
     @GetMapping("/clientes")
-    public List<Cliente> clientes(@RequestParam String q) {
-        return clientes.buscar(q, 10);
+    public List<DatosCliente> clientes(@RequestParam @Size(max = 100) String q) {
+        return clientes.buscar(q, SUGERENCIAS).stream().map(Cliente::datos).toList();
     }
 
     @GetMapping("/productos")
-    public List<Producto> productos(@RequestParam String q) {
-        return productos.buscar(q, 10);
+    public List<ProductoSugerencia> productos(@RequestParam @Size(max = 100) String q) {
+        return productos.buscar(q, SUGERENCIAS).stream().map(ProductoSugerencia::de).toList();
     }
 
     @PostMapping("/cotizaciones")
-    public Map<String, Long> crear(@RequestBody Cotizacion c) {
-        c.setId(null);
-        return Map.of("id", service.guardar(c));
+    public Map<String, Long> crear(@Valid @RequestBody CotizacionForm form) {
+        return Map.of("id", service.guardar(null, form));
     }
 
     @PutMapping("/cotizaciones/{id}")
-    public Map<String, Long> actualizar(@PathVariable long id, @RequestBody Cotizacion c) {
-        c.setId(id);
-        return Map.of("id", service.guardar(c));
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> error(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    public Map<String, Long> actualizar(@PathVariable long id, @Valid @RequestBody CotizacionForm form) {
+        return Map.of("id", service.guardar(id, form));
     }
 }

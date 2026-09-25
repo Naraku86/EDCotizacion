@@ -1,4 +1,4 @@
-package com.edcotizacion.config;
+package com.edcotizacion.comun;
 
 import java.text.Normalizer;
 import java.util.Locale;

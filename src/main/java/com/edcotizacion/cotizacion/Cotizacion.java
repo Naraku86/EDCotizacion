@@ -6,8 +6,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.edcotizacion.cliente.Cliente;
-
 public class Cotizacion {
 
     private Long id;
@@ -15,8 +13,10 @@ public class Cotizacion {
     private LocalDate fecha;
     private int vigenciaDias;
     private Estado estado = Estado.BORRADOR;
+    /** Cliente del catálogo (null si se borró). */
+    private Long clienteId;
     /** Copia de los datos del cliente al momento de cotizar. */
-    private Cliente cliente = new Cliente();
+    private DatosCliente cliente = DatosCliente.vacio();
     private boolean aplicaIva = true;
     private BigDecimal tasaIva;
     private BigDecimal envio = BigDecimal.ZERO;
@@ -63,8 +63,10 @@ public class Cotizacion {
     public void setVigenciaDias(int vigenciaDias) { this.vigenciaDias = vigenciaDias; }
     public Estado getEstado() { return estado; }
     public void setEstado(Estado estado) { this.estado = estado; }
-    public Cliente getCliente() { return cliente; }
-    public void setCliente(Cliente cliente) { this.cliente = cliente; }
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public DatosCliente getCliente() { return cliente; }
+    public void setCliente(DatosCliente cliente) { this.cliente = cliente; }
     public boolean isAplicaIva() { return aplicaIva; }
     public void setAplicaIva(boolean aplicaIva) { this.aplicaIva = aplicaIva; }
     public BigDecimal getTasaIva() { return tasaIva; }

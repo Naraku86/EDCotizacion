@@ -8,7 +8,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-import com.edcotizacion.config.Busqueda;
+import com.edcotizacion.comun.Busqueda;
+import com.edcotizacion.cotizacion.DatosCliente;
 
 @Repository
 public class ClienteRepository {
@@ -48,11 +49,11 @@ public class ClienteRepository {
      * Da de alta el cliente si no existe; si existe actualiza solo los datos
      * que vienen capturados. Devuelve el id.
      */
-    public long guardar(Cliente c) {
-        Optional<Cliente> existente = porNombre(c.getNombre());
+    public long guardar(DatosCliente c) {
+        Optional<Cliente> existente = porNombre(c.nombre());
         if (existente.isEmpty()) {
             jdbc.sql("INSERT INTO cliente (nombre, contacto, telefono, email, rfc, direccion) VALUES (?, ?, ?, ?, ?, ?)")
-                    .params(c.getNombre().trim(), c.getContacto(), c.getTelefono(), c.getEmail(), c.getRfc(), c.getDireccion())
+                    .params(c.nombre(), c.contacto(), c.telefono(), c.email(), c.rfc(), c.direccion())
                     .update();
             return jdbc.sql("SELECT last_insert_rowid()").query(Long.class).single();
         }
@@ -65,7 +66,7 @@ public class ClienteRepository {
                     rfc       = COALESCE(NULLIF(?, ''), rfc),
                     direccion = COALESCE(NULLIF(?, ''), direccion)
                 WHERE id = ?""")
-                .params(c.getContacto(), c.getTelefono(), c.getEmail(), c.getRfc(), c.getDireccion(), id)
+                .params(c.contacto(), c.telefono(), c.email(), c.rfc(), c.direccion(), id)
                 .update();
         return id;
     }

@@ -7,7 +7,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-import com.edcotizacion.config.Busqueda;
+import com.edcotizacion.comun.Busqueda;
 
 import static com.edcotizacion.cotizacion.Montos.decimal;
 import static com.edcotizacion.cotizacion.Montos.texto;

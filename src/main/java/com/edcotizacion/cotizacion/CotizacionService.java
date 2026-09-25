@@ -8,12 +8,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.edcotizacion.cliente.Cliente;
 import com.edcotizacion.cliente.ClienteRepository;
+import com.edcotizacion.comun.NoEncontradoException;
 import com.edcotizacion.config.ConfigService;
 import com.edcotizacion.producto.ProductoRepository;
 
@@ -48,7 +49,7 @@ public class CotizacionService {
 
     public Cotizacion obtener(long id) {
         return cotizaciones.porId(id)
-                .orElseThrow(() -> new IllegalArgumentException("No existe la cotización " + id));
+                .orElseThrow(() -> new NoEncontradoException("No existe la cotización " + id));
     }
 
     public List<Cotizacion> buscar(String texto, Estado estado) {
@@ -56,19 +57,24 @@ public class CotizacionService {
     }
 
     /**
-     * Guarda la cotización: da de alta cliente y productos nuevos, recalcula
-     * importes y totales, y asigna folio si es nueva. Devuelve el id.
+     * Guarda lo capturado (ya validado): da de alta cliente y productos nuevos, recalcula
+     * importes y totales, y asigna folio si es nueva. id null = nueva. Devuelve el id.
      */
     @Transactional
-    public long guardar(Cotizacion c) {
-        validar(c);
-        limpiar(c.getCliente());
-        // Las condiciones vacías no se imprimen en el PDF
-        c.setFormaPago(nulo(c.getFormaPago()));
-        c.setTiempoEntrega(nulo(c.getTiempoEntrega()));
-        c.setGarantia(nulo(c.getGarantia()));
-        c.setObservaciones(nulo(c.getObservaciones()));
-        c.getCliente().setId(clientes.guardar(c.getCliente()));
+    public long guardar(Long id, CotizacionForm f) {
+        Cotizacion c = id == null ? new Cotizacion() : obtener(id);
+        c.setFecha(f.fecha());
+        c.setVigenciaDias(f.vigenciaDias());
+        c.setCliente(f.cliente());
+        c.setClienteId(clientes.guardar(f.cliente()));
+        c.setAplicaIva(f.aplicaIva());
+        c.setTasaIva(f.tasaIva());
+        c.setEnvio(f.envio());
+        c.setFormaPago(f.formaPago());
+        c.setTiempoEntrega(f.tiempoEntrega());
+        c.setGarantia(f.garantia());
+        c.setObservaciones(f.observaciones());
+        c.setPartidas(f.partidas().stream().map(CotizacionService::partida).collect(Collectors.toCollection(ArrayList::new)));
 
         calcular(c);
         for (Partida p : c.getPartidas()) {
@@ -76,14 +82,23 @@ public class CotizacionService {
         }
 
         c.setModificada(LocalDateTime.now());
-        if (c.getId() == null) {
+        if (id == null) {
             c.setFolio(config.tomarFolio());
             c.setEstado(Estado.BORRADOR);
             c.setCreada(c.getModificada());
             return cotizaciones.insertar(c);
         }
         cotizaciones.actualizar(c);
-        return c.getId();
+        return id;
+    }
+
+    private static Partida partida(CotizacionForm.PartidaForm f) {
+        Partida p = new Partida();
+        p.setDescripcion(f.descripcion());
+        p.setCantidad(f.cantidad());
+        p.setCosto(f.costo());
+        p.setPrecioUnitario(f.precioUnitario());
+        return p;
     }
 
     /** Recalcula importes y totales. El envío no lleva IVA. */
@@ -102,60 +117,22 @@ public class CotizacionService {
         c.setTotal(c.getSubtotal().add(c.getIva()).add(c.getEnvio()));
     }
 
+    /** Copia con fecha de hoy, folio nuevo y en borrador. */
     @Transactional
     public long duplicar(long id) {
-        Cotizacion c = obtener(id);
-        c.setId(null);
-        c.setFecha(LocalDate.now());
-        return guardar(c);
+        CotizacionForm copia = CotizacionForm.de(obtener(id));
+        return guardar(null, new CotizacionForm(LocalDate.now(), copia.vigenciaDias(), copia.cliente(),
+                copia.aplicaIva(), copia.tasaIva(), copia.envio(), copia.formaPago(), copia.tiempoEntrega(),
+                copia.garantia(), copia.observaciones(), copia.partidas()));
     }
 
     public void cambiarEstado(long id, Estado estado) {
+        obtener(id);
         cotizaciones.cambiarEstado(id, estado);
     }
 
     public void eliminar(long id) {
+        obtener(id);
         cotizaciones.eliminar(id);
-    }
-
-    private static void validar(Cotizacion c) {
-        List<String> errores = new ArrayList<>();
-        if (c.getCliente() == null || blank(c.getCliente().getNombre())) {
-            errores.add("Captura el nombre del cliente.");
-        }
-        c.getPartidas().removeIf(p -> blank(p.getDescripcion()) && p.getPrecioUnitario() == null);
-        if (c.getPartidas().isEmpty()) {
-            errores.add("Agrega al menos un producto.");
-        }
-        for (int i = 0; i < c.getPartidas().size(); i++) {
-            Partida p = c.getPartidas().get(i);
-            String n = "Partida " + (i + 1) + ": ";
-            if (blank(p.getDescripcion())) errores.add(n + "falta la descripción.");
-            if (p.getCantidad() == null || p.getCantidad().signum() <= 0) errores.add(n + "la cantidad debe ser mayor a 0.");
-            if (p.getPrecioUnitario() == null) errores.add(n + "falta el precio.");
-            if (p.getDescripcion() != null) p.setDescripcion(p.getDescripcion().trim());
-        }
-        if (c.getFecha() == null) errores.add("Falta la fecha.");
-        if (c.getTasaIva() == null) errores.add("Falta la tasa de IVA.");
-        if (!errores.isEmpty()) {
-            throw new IllegalArgumentException(String.join("\n", errores));
-        }
-    }
-
-    private static void limpiar(Cliente cl) {
-        cl.setNombre(cl.getNombre().trim());
-        cl.setContacto(nulo(cl.getContacto()));
-        cl.setTelefono(nulo(cl.getTelefono()));
-        cl.setEmail(nulo(cl.getEmail()));
-        cl.setRfc(nulo(cl.getRfc()));
-        cl.setDireccion(nulo(cl.getDireccion()));
-    }
-
-    private static boolean blank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    private static String nulo(String s) {
-        return blank(s) ? null : s.trim();
     }
 }

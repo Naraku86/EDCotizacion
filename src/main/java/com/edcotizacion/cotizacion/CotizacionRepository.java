@@ -16,8 +16,7 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-import com.edcotizacion.cliente.Cliente;
-import com.edcotizacion.config.Busqueda;
+import com.edcotizacion.comun.Busqueda;
 
 @Repository
 public class CotizacionRepository {
@@ -50,8 +49,8 @@ public class CotizacionRepository {
                 });
         Busqueda b = new Busqueda(texto);
         return todas.stream()
-                .filter(c -> b.coincide(c.getFolio() + " " + c.getCliente().getNombre() + " "
-                        + Objects.toString(c.getCliente().getContacto(), "") + " " + productos.getOrDefault(c.getId(), "")))
+                .filter(c -> b.coincide(c.getFolio() + " " + c.getCliente().nombre() + " "
+                        + Objects.toString(c.getCliente().contacto(), "") + " " + productos.getOrDefault(c.getId(), "")))
                 .toList();
     }
 
@@ -63,9 +62,9 @@ public class CotizacionRepository {
                     forma_pago, tiempo_entrega, garantia, observaciones, creada, modificada)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""")
                 .params(c.getFolio(), c.getFecha().toString(), c.getVigenciaDias(), c.getEstado().name(),
-                        c.getCliente().getId(), c.getCliente().getNombre(), c.getCliente().getContacto(),
-                        c.getCliente().getTelefono(), c.getCliente().getEmail(), c.getCliente().getRfc(),
-                        c.getCliente().getDireccion(),
+                        c.getClienteId(), c.getCliente().nombre(), c.getCliente().contacto(),
+                        c.getCliente().telefono(), c.getCliente().email(), c.getCliente().rfc(),
+                        c.getCliente().direccion(),
                         c.isAplicaIva() ? 1 : 0, texto(c.getTasaIva()), texto(c.getEnvio()),
                         texto(c.getSubtotal()), texto(c.getIva()), texto(c.getTotal()),
                         c.getFormaPago(), c.getTiempoEntrega(), c.getGarantia(), c.getObservaciones(),
@@ -84,9 +83,9 @@ public class CotizacionRepository {
                     aplica_iva = ?, tasa_iva = ?, envio = ?, subtotal = ?, iva = ?, total = ?,
                     forma_pago = ?, tiempo_entrega = ?, garantia = ?, observaciones = ?, modificada = ?
                 WHERE id = ?""")
-                .params(c.getFecha().toString(), c.getVigenciaDias(), c.getCliente().getId(),
-                        c.getCliente().getNombre(), c.getCliente().getContacto(), c.getCliente().getTelefono(),
-                        c.getCliente().getEmail(), c.getCliente().getRfc(), c.getCliente().getDireccion(),
+                .params(c.getFecha().toString(), c.getVigenciaDias(), c.getClienteId(),
+                        c.getCliente().nombre(), c.getCliente().contacto(), c.getCliente().telefono(),
+                        c.getCliente().email(), c.getCliente().rfc(), c.getCliente().direccion(),
                         c.isAplicaIva() ? 1 : 0, texto(c.getTasaIva()), texto(c.getEnvio()),
                         texto(c.getSubtotal()), texto(c.getIva()), texto(c.getTotal()),
                         c.getFormaPago(), c.getTiempoEntrega(), c.getGarantia(), c.getObservaciones(),
@@ -144,16 +143,11 @@ public class CotizacionRepository {
         c.setFecha(LocalDate.parse(rs.getString("fecha")));
         c.setVigenciaDias(rs.getInt("vigencia_dias"));
         c.setEstado(Estado.valueOf(rs.getString("estado")));
-        Cliente cl = new Cliente();
         long clienteId = rs.getLong("cliente_id");
-        cl.setId(rs.wasNull() ? null : clienteId);
-        cl.setNombre(rs.getString("cliente_nombre"));
-        cl.setContacto(rs.getString("cliente_contacto"));
-        cl.setTelefono(rs.getString("cliente_telefono"));
-        cl.setEmail(rs.getString("cliente_email"));
-        cl.setRfc(rs.getString("cliente_rfc"));
-        cl.setDireccion(rs.getString("cliente_direccion"));
-        c.setCliente(cl);
+        c.setClienteId(rs.wasNull() ? null : clienteId);
+        c.setCliente(new DatosCliente(rs.getString("cliente_nombre"), rs.getString("cliente_contacto"),
+                rs.getString("cliente_telefono"), rs.getString("cliente_email"), rs.getString("cliente_rfc"),
+                rs.getString("cliente_direccion")));
         c.setAplicaIva(rs.getInt("aplica_iva") == 1);
         c.setTasaIva(decimal(rs.getString("tasa_iva")));
         c.setEnvio(decimal(rs.getString("envio")));
