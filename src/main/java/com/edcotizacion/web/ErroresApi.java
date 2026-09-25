@@ -22,7 +22,7 @@ import com.edcotizacion.comun.NoEncontradoException;
  * Errores de las peticiones JSON en un solo formato: {"error": "mensaje para el usuario"}.
  * Nunca se devuelven trazas ni detalles internos.
  */
-@RestControllerAdvice(assignableTypes = { ApiController.class, PlantillaController.class })
+@RestControllerAdvice(assignableTypes = { ApiController.class, PlantillaController.class, DemoController.class })
 public class ErroresApi {
 
     private static final Logger log = LoggerFactory.getLogger(ErroresApi.class);

@@ -55,7 +55,7 @@ public record CotizacionForm(
         }
 
         /** Renglón que el usuario dejó en blanco: se ignora. */
-        boolean enBlanco() {
+        public boolean enBlanco() {
             return vacio(descripcion) && precioUnitario == null;
         }
     }

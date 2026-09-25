@@ -2,6 +2,12 @@
 app:
   home: ${user.home}/EDCotizacion
   abrir-navegador: true
+  # Demo público en /demo: sin login y sin guardar nada. false = apagado (la ruta pide sesión y no existe).
+  demo:
+    activo: true
+    vistas-por-minuto: 90   # por IP
+    pdf-por-minuto: 10      # por IP
+    pdf-simultaneos: 2      # en toda la app
 
 server:
   port: 8090

@@ -2,6 +2,7 @@
 
 Aplicación local para hacer cotizaciones y generar su PDF.
 
+- Demo público en `/demo`: cualquiera captura su empresa y su cotización en una sola página y descarga el PDF, sin cuenta y sin guardar nada.
 - Varias empresas en una misma instancia: cada una con sus datos, logo y plantilla; elige la emisora al cotizar.
 - Clientes y productos se dan de alta solos: escribes el nombre y, si no existe, se agrega al guardar.
 - Precio sugerido = costo + % de ganancia (30% por defecto), o escribes directo el precio final (con o sin IVA).
@@ -76,6 +77,33 @@ Al actualizar, la empresa y plantilla existentes se conservan como primera empre
 anteriores se vinculan a ella. Respalda la base antes de actualizar; la versión anterior de la aplicación
 requiere restaurar ese respaldo si se desea volver atrás.
 
+## Demo público (`/demo`)
+
+`http://localhost:8090/demo` abre sin iniciar sesión (también hay un enlace en la pantalla de entrada).
+En una sola página se capturan los datos de la empresa y el logo, se elige un diseño de la galería,
+colores y papel, se capturan cliente, productos y condiciones, y se descarga el PDF. La vista previa se
+actualiza mientras se escribe.
+
+- **No se guarda nada en el servidor**: el demo no usa la base de datos (ni clientes, ni productos, ni
+  folios). Lo capturado solo se queda en el `localStorage` del navegador del visitante; *Empezar de cero*
+  lo borra.
+- Para frenar abusos: hasta 50 productos, 10 PDF y 90 vistas previas por minuto por IP, y 2 PDF
+  generándose a la vez. Al pasarse responde 429 con un mensaje.
+- Se ajusta o apaga en `application.yml` (o con `--app.demo.activo=false` al arrancar):
+
+```yaml
+app:
+  demo:
+    activo: true            # false = /demo no existe y pide sesión como todo lo demás
+    vistas-por-minuto: 90
+    pdf-por-minuto: 10
+    pdf-simultaneos: 2
+```
+
+Si la app queda detrás de un proxy inverso (nginx, Caddy…), configura
+`server.forward-headers-strategy: native` para que el límite por IP use la IP real del visitante y no la
+del proxy.
+
 ## Varias instalaciones en la misma PC
 
 Cada carpeta de datos es una instalación independiente (base, empresa, plantilla y usuarios):
@@ -115,11 +143,13 @@ src/main/java/com/edcotizacion/
 ├── producto/     Alta automática, último costo/precio y autocompletado
 ├── pdf/          Diseño (bloques) + datos de empresa → HTML (Thymeleaf) → PDF
 ├── config/       Valores por defecto y folio consecutivo
+├── demo/         Demo público: formulario (record) y límite de peticiones
+├── empresa/      Empresas emisoras
 ├── seguridad/    Login (Spring Security) y usuarios
 └── web/          Controladores (pantallas y API JSON del formulario)
 src/main/resources/
 ├── templates/          Pantallas de la app
-├── static/             app.css, cotizacion.js (formulario), plantilla.js (editor), fuentes del PDF
+├── static/             app.css, cotizacion.js (formulario), plantilla.js (editor), demo.js, fuentes del PDF
 ├── templates/pdf/      HTML del PDF, armado a partir de los bloques del diseño
 ├── pdf/                Diseño genérico por defecto
 └── db/migration/       Esquema de la base (Flyway)

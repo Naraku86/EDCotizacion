@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragmentos :: head('Demo')}"></head>
+<body class="demo-pagina">
+<a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+<header class="barra">
+    <span class="logo">ED <span>Cotizaciones</span></span>
+    <span class="demo-etiqueta">Demo · no se guarda nada</span>
+    <a class="btn chico entrar" th:href="@{/login}">Entrar al sistema</a>
+</header>
+
+<main id="contenido" class="demo">
+<div class="demo-form">
+    <h1>Haz tu cotización en PDF</h1>
+    <p class="tenue demo-intro">
+        Captura tus datos, elige un diseño y descarga el PDF. Nada se guarda en el servidor:
+        lo que escribas solo se queda en este navegador para que no lo pierdas al recargar.
+    </p>
+
+    <div id="error" class="aviso error" role="alert" tabindex="-1" hidden></div>
+
+    <section class="tarjeta" aria-labelledby="t-empresa">
+        <h2 id="t-empresa">1. Tu empresa</h2>
+        <div class="demo-logo">
+            <img id="logoVista" alt="Logo de tu empresa" hidden>
+            <button type="button" id="btnLogo" class="btn">Subir logo</button>
+            <button type="button" id="quitarLogo" class="btn chico peligro" hidden>Quitar logo</button>
+            <span class="tenue">PNG o JPG</span>
+            <input id="archivoLogo" type="file" accept="image/png,image/jpeg" hidden>
+        </div>
+        <div class="fila c-dos">
+            <div class="ancho"><label for="e-nombre">Nombre de la empresa</label><input id="e-nombre" data-empresa="nombre" maxlength="200" placeholder="Mi Empresa S.A. de C.V."></div>
+            <div class="ancho"><label for="e-lema">Lema o giro</label><input id="e-lema" data-empresa="lema" maxlength="300" placeholder="Productos y servicios"></div>
+            <div><label for="e-rfc">RFC</label><input id="e-rfc" data-empresa="rfc" maxlength="20"></div>
+            <div><label for="e-telefono">Teléfono</label><input id="e-telefono" data-empresa="telefono" maxlength="50" type="tel"></div>
+            <div><label for="e-correo">Correo</label><input id="e-correo" data-empresa="correo" maxlength="200" type="email"></div>
+            <div><label for="e-web">Página web</label><input id="e-web" data-empresa="web" maxlength="200"></div>
+            <div class="ancho"><label for="e-direccion">Dirección</label><input id="e-direccion" data-empresa="direccion" maxlength="500"></div>
+            <div class="ancho"><label for="e-ejecutivo">Quién atiende (ejecutivo)</label><input id="e-ejecutivo" data-empresa="ejecutivo" maxlength="200"></div>
+        </div>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="t-diseno">
+        <h2 id="t-diseno">2. Diseño</h2>
+        <div id="ejemplos" class="demo-ejemplos" role="group" aria-label="Diseños de ejemplo"></div>
+        <div class="fila c-tres demo-colores">
+            <div><label for="primario">Color principal</label><input id="primario" type="color"></div>
+            <div><label for="acento">Color de acento</label><input id="acento" type="color"></div>
+            <div>
+                <label for="papel">Papel</label>
+                <select id="papel">
+                    <option value="carta">Carta</option>
+                    <option value="a4">A4</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="t-cotizacion">
+        <h2 id="t-cotizacion">3. Cotización y cliente</h2>
+        <div class="fila c-tres">
+            <div><label for="folio">Folio</label><input id="folio" maxlength="30"></div>
+            <div><label for="fecha">Fecha</label><input id="fecha" type="date"></div>
+            <div><label for="vigencia">Vigencia (días)</label><input id="vigencia" type="number" min="0" max="3650" class="num"></div>
+        </div>
+        <div class="fila demo-cliente">
+            <div><label for="cl-nombre">Cliente (empresa o nombre)</label><input id="cl-nombre" data-cliente="nombre" maxlength="200"></div>
+        </div>
+        <details>
+            <summary>Más datos del cliente (opcional; solo se imprimen los que captures)</summary>
+            <div class="fila c-dos demo-cliente">
+                <div><label for="cl-contacto">Contacto</label><input id="cl-contacto" data-cliente="contacto" maxlength="200"></div>
+                <div><label for="cl-telefono">Teléfono</label><input id="cl-telefono" data-cliente="telefono" maxlength="50" type="tel"></div>
+                <div><label for="cl-email">Correo</label><input id="cl-email" data-cliente="email" maxlength="200" type="email"></div>
+                <div><label for="cl-rfc">RFC</label><input id="cl-rfc" data-cliente="rfc" maxlength="20"></div>
+                <div class="ancho"><label for="cl-direccion">Dirección</label><input id="cl-direccion" data-cliente="direccion" maxlength="500"></div>
+            </div>
+        </details>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="t-productos">
+        <h2 id="t-productos">4. Productos y servicios</h2>
+        <div class="tabla-contenedor" role="region" aria-label="Productos y servicios" tabindex="0">
+            <table class="partidas-demo">
+                <thead>
+                <tr>
+                    <th class="col-n">#</th>
+                    <th>Descripción</th>
+                    <th class="col-cant num">Cant.</th>
+                    <th class="col-precio num">P. unitario</th>
+                    <th class="col-imp num">Importe</th>
+                    <th class="col-x"><span class="solo-lector">Quitar</span></th>
+                </tr>
+                </thead>
+                <tbody id="partidas"></tbody>
+            </table>
+        </div>
+        <div class="demo-agregar">
+            <button class="btn" id="agregar" type="button">+ Agregar producto</button>
+            <span class="tenue" th:text="'Hasta ' + ${maxPartidas} + ' productos en el demo.'">Hasta 50 productos.</span>
+        </div>
+        <table class="totales demo-totales">
+            <tr><td>Subtotal</td><td id="t-subtotal">$0.00</td></tr>
+            <tr>
+                <td><label><input type="checkbox" id="aplicaIva"> IVA</label></td>
+                <td>
+                    <input id="tasaIva" aria-label="Tasa de IVA en porcentaje" class="tasa num" type="number" step="0.01" min="0" max="100"> %
+                    &nbsp; <span id="t-iva">$0.00</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Envío <span class="tenue">(sin IVA)</span></td>
+                <td><input id="envio" aria-label="Costo de envío" class="num" inputmode="decimal" placeholder="0.00"></td>
+            </tr>
+            <tr class="total"><td>TOTAL</td><td id="t-total">$0.00</td></tr>
+        </table>
+    </section>
+
+    <details class="tarjeta seccion">
+        <summary>5. Condiciones comerciales</summary>
+        <div class="fila c-dos">
+            <div><label for="formaPago">Forma de pago</label><textarea id="formaPago" rows="2" maxlength="1000"></textarea></div>
+            <div><label for="tiempoEntrega">Tiempo de entrega</label><textarea id="tiempoEntrega" rows="2" maxlength="1000"></textarea></div>
+            <div><label for="garantia">Garantía</label><textarea id="garantia" rows="2" maxlength="1000"></textarea></div>
+            <div><label for="observaciones">Observaciones</label><textarea id="observaciones" rows="2" maxlength="2000"></textarea></div>
+        </div>
+        <div class="ayuda">Si dejas un campo vacío, esa fila no aparece en el PDF.</div>
+    </details>
+
+    <div class="botonera demo-acciones">
+        <button class="btn peligro" id="reiniciar" type="button">Empezar de cero</button>
+        <button class="btn primario" id="descargar" type="button">Descargar PDF</button>
+    </div>
+</div>
+
+<section class="demo-vista" aria-labelledby="t-vista">
+    <div class="demo-vista-cabecera">
+        <h2 id="t-vista">Vista previa</h2>
+        <span id="estado" class="ed-estado" role="status"></span>
+    </div>
+    <div id="lienzo" class="demo-lienzo">
+        <div id="hoja-host"></div>
+    </div>
+</section>
+</main>
+
+<!-- datos para demo.js (sin scripts en línea: la CSP solo permite archivos .js) -->
+<div id="datos" hidden th:data-url="@{/demo}" th:data-ejemplos="${ejemplosJson}" th:data-max="${maxPartidas}"></div>
+<script th:src="@{/demo.js}"></script>
+</body>
+</html>
