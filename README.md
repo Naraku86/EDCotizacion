@@ -31,6 +31,17 @@ Todo vive en `~/EDCotizacion/`:
 La primera vez el usuario es **admin** y la contraseña **admin**. Mientras no los cambies, la app
 muestra un aviso; se cambian en **Cuenta** (tu nombre de usuario, arriba a la derecha).
 
+## Seguridad
+
+- Contraseñas guardadas con BCrypt; mínimo 8 caracteres. Tras 5 intentos fallidos la cuenta se
+  bloquea 5 minutos.
+- Protección CSRF, cabeceras de seguridad y política CSP sin scripts en línea.
+- Validación de todo lo que llega del navegador; el logo solo acepta PNG/JPG (máx. 1.5 MB) y
+  ninguna petición puede pasar de 5 MB.
+- **La app escucha en toda la red local por HTTP**: desde otra computadora la contraseña viaja sin
+  cifrar. Si solo la usas en tu PC, arráncala con `--server.address=127.0.0.1`. Para usarla en red con
+  cifrado, configura HTTPS (`server.ssl.*` de Spring Boot) o ponla detrás de un proxy con certificado.
+
 ## Plantilla del PDF
 
 **Configuración › Editar plantilla** muestra la hoja tal como saldrá el PDF y se edita encima:

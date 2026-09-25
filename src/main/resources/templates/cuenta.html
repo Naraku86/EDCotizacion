@@ -14,12 +14,12 @@
             <input id="nombre" name="nombre" th:value="${usuario}" autocomplete="username" required>
         </div>
         <div class="campo">
-            <label for="nuevo">Contraseña nueva</label>
-            <input id="nuevo" name="nuevo" type="password" autocomplete="new-password" minlength="4" required>
+            <label for="nuevo">Contraseña nueva (mínimo 8 caracteres)</label>
+            <input id="nuevo" name="nuevo" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
         </div>
         <div class="campo">
             <label for="confirmar">Repite la contraseña nueva</label>
-            <input id="confirmar" name="confirmar" type="password" autocomplete="new-password" minlength="4" required>
+            <input id="confirmar" name="confirmar" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
         </div>
         <div class="campo">
             <label for="actual">Contraseña actual (para confirmar que eres tú)</label>

@@ -27,6 +27,7 @@ import com.edcotizacion.pdf.Empresa;
 import com.edcotizacion.pdf.PdfService;
 
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -44,14 +45,16 @@ public class PlantillaController {
     private final CotizacionService cotizaciones;
     private final ConfigService config;
     private final JsonMapper json;
+    private final Validator validador;
 
     public PlantillaController(DisenoService disenos, PdfService pdf, CotizacionService cotizaciones,
-            ConfigService config, JsonMapper json) {
+            ConfigService config, JsonMapper json, Validator validador) {
         this.disenos = disenos;
         this.pdf = pdf;
         this.cotizaciones = cotizaciones;
         this.config = config;
         this.json = json;
+        this.validador = validador;
     }
 
     @GetMapping
@@ -84,6 +87,9 @@ public class PlantillaController {
     @PostMapping("/muestra.pdf")
     public ResponseEntity<byte[]> muestraSinGuardar(@RequestParam String datos) throws IOException {
         Datos d = json.readValue(datos, Datos.class);
+        validador.validate(d).stream().findFirst().ifPresent(v -> {
+            throw new IllegalArgumentException(v.getMessage());
+        });
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
                 .body(pdf.generar(muestra(), disenos.normalizar(d.diseno()), d.empresa()));
     }

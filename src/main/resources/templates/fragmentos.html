@@ -8,6 +8,7 @@
     <meta name="_csrf_header" th:if="${_csrf}" th:content="${_csrf.headerName}">
     <title th:text="${titulo} + ' · Cotizaciones'">Cotizaciones</title>
     <link rel="stylesheet" th:href="@{/app.css}">
+    <script th:src="@{/app.js}" defer></script>
 </head>
 <body>
 <th:block th:fragment="barra(activo)">

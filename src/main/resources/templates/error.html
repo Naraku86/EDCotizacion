@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error · Cotizaciones</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body class="pagina-login">
+<div class="tarjeta login">
+    <th:block th:switch="${status}">
+        <h1 th:case="404">No se encontró</h1>
+        <h1 th:case="403">Sin permiso</h1>
+        <h1 th:case="413">Archivo demasiado grande</h1>
+        <h1 th:case="*">Algo salió mal</h1>
+    </th:block>
+    <p class="tenue" th:if="${status == 404}">La página o la cotización que buscas no existe (quizá se eliminó).</p>
+    <p class="tenue" th:if="${status == 403}">La sesión expiró o la página se abrió desde otro lugar. Vuelve a intentarlo.</p>
+    <p class="tenue" th:if="${status >= 500}">Ocurrió un error inesperado. Si se repite, revisa el registro de la aplicación.</p>
+    <a class="btn primario" th:href="@{/}">Volver al inicio</a>
+</div>
+</body>
+</html>

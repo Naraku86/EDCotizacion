@@ -122,11 +122,8 @@
     </section>
 </main>
 
-<script th:inline="javascript">
-    const COT = JSON.parse(/*[[${cotJson}]]*/ '{}');
-    const COT_ID = /*[[${cot.id}]]*/ null;
-    const GANANCIA_DEFAULT = Number(/*[[${gananciaDefault}]]*/ 30);
-</script>
+<!-- datos para cotizacion.js (sin scripts en línea: la CSP solo permite archivos .js) -->
+<div id="datos" hidden th:data-cot="${cotJson}" th:data-id="${cot.id}" th:data-ganancia="${gananciaDefault}"></div>
 <script th:src="@{/cotizacion.js}"></script>
 </body>
 </html>

@@ -1,5 +1,8 @@
 package com.edcotizacion.seguridad;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +30,12 @@ public class Usuario {
     @Column(name = "por_defecto", nullable = false)
     private boolean porDefecto;
 
+    @Column(name = "intentos_fallidos", nullable = false)
+    private int intentosFallidos;
+
+    @Column(name = "bloqueado_hasta")
+    private LocalDateTime bloqueadoHasta;
+
     protected Usuario() {
         // JPA
     }
@@ -37,10 +46,28 @@ public class Usuario {
         this.porDefecto = porDefecto;
     }
 
-    public void cambiar(String nombre, String passwordHash, boolean porDefecto) {
+    public void cambiar(String nombre, String passwordHash) {
         this.nombre = nombre;
         this.password = passwordHash;
-        this.porDefecto = porDefecto;
+        this.porDefecto = false;
+    }
+
+    public boolean estaBloqueado(LocalDateTime ahora) {
+        return bloqueadoHasta != null && ahora.isBefore(bloqueadoHasta);
+    }
+
+    /** Cuenta un intento fallido; al llegar al máximo bloquea la cuenta por un tiempo. */
+    public void registrarFallo(LocalDateTime ahora, int maximo, Duration bloqueo) {
+        intentosFallidos++;
+        if (intentosFallidos >= maximo) {
+            bloqueadoHasta = ahora.plus(bloqueo);
+            intentosFallidos = 0;
+        }
+    }
+
+    public void registrarExito() {
+        intentosFallidos = 0;
+        bloqueadoHasta = null;
     }
 
     public Long getId() { return id; }

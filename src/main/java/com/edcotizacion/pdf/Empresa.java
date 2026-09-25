@@ -5,6 +5,7 @@ import static com.edcotizacion.comun.Textos.limpio;
 import java.util.List;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -23,7 +24,12 @@ public record Empresa(
         @Size(max = 200, message = "La página web es demasiado larga.") String web,
         @Size(max = 500, message = "La dirección es demasiado larga.") String direccion,
         @Size(max = 200, message = "El nombre del ejecutivo es demasiado largo.") String ejecutivo,
+        @Size(max = Empresa.LOGO_MAXIMO, message = "El logo es demasiado grande (máximo 1.5 MB).")
+        @Pattern(regexp = "data:image/(png|jpeg);base64,[A-Za-z0-9+/]+=*", message = "El logo debe ser una imagen PNG o JPG.")
         String logo) {
+
+    /** ~1.5 MB de imagen en base64. */
+    public static final int LOGO_MAXIMO = 2_000_000;
 
     public static final List<String> CAMPOS = List.of(
             "nombre", "lema", "rfc", "telefono", "correo", "web", "direccion", "ejecutivo", "logo");

@@ -28,8 +28,17 @@ public record Diseno(
 
     public static final List<String> PLANTILLAS = List.of("clasica", "minimalista", "moderna", "compacta");
 
+    /** Límites para que un diseño no pueda crecer sin control (viene del navegador). */
+    static final int MAX_TEXTOS = 40;
+    static final int MAX_LARGO = 2000;
+
     /** Sección opcional que se agrega con "+ ..." en el editor. */
     public record Seccion(boolean activo, String titulo, String texto) {
+
+        public Seccion {
+            titulo = recortar(titulo);
+            texto = recortar(texto);
+        }
 
         static Seccion oVacia(Seccion s) {
             return s == null ? new Seccion(false, null, null) : s;
@@ -52,6 +61,14 @@ public record Diseno(
     }
 
     private static Map<String, String> copia(Map<String, String> m) {
-        return m == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(m));
+        Map<String, String> r = new LinkedHashMap<>();
+        if (m != null) {
+            m.entrySet().stream().limit(MAX_TEXTOS).forEach(e -> r.put(recortar(e.getKey()), recortar(e.getValue())));
+        }
+        return Collections.unmodifiableMap(r);
+    }
+
+    private static String recortar(String s) {
+        return s == null || s.length() <= MAX_LARGO ? s : s.substring(0, MAX_LARGO);
     }
 }

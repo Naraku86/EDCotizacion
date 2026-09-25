@@ -8,7 +8,7 @@
 
     <form class="filtros" method="get" th:action="@{/}">
         <input type="search" name="q" th:value="${q}" placeholder="Buscar por folio, cliente o producto…" autofocus>
-        <select name="estado" onchange="this.form.submit()">
+        <select name="estado" data-autoenviar>
             <option value="">Todos los estados</option>
             <option th:each="e : ${estados}" th:value="${e}" th:text="${e.etiqueta}" th:selected="${e == estado}"></option>
         </select>
@@ -65,8 +65,7 @@
                         <button class="btn chico" title="Crea una copia con folio nuevo">Duplicar</button>
                     </form>
                     <form method="post" th:action="@{/cotizaciones/{id}/eliminar(id=${c.id})}"
-                          th:data-folio="${c.folio}"
-                          onsubmit="return confirm('¿Eliminar la cotización ' + this.dataset.folio + '? No se puede deshacer.')">
+                          th:data-confirmar="'¿Eliminar la cotización ' + ${c.folio} + '? No se puede deshacer.'">
                         <button class="btn chico peligro">Eliminar</button>
                     </form>
                 </td>

@@ -4,6 +4,10 @@
     'use strict';
 
     const $ = (sel, ctx = document) => ctx.querySelector(sel);
+    const DATOS = document.getElementById('datos').dataset;
+    const COT = JSON.parse(DATOS.cot || '{}');
+    const COT_ID = DATOS.id ? Number(DATOS.id) : null;
+    const GANANCIA_DEFAULT = Number(DATOS.ganancia || 30);
     const tbody = $('#partidas tbody');
     let cambios = false;
 

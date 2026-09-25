@@ -56,11 +56,9 @@
     <input type="hidden" name="datos">
 </form>
 
-<script th:inline="javascript">
-    const PLANTILLA = JSON.parse(/*[[${datosJson}]]*/ '{}');
-    const GENERICO = JSON.parse(/*[[${genericoJson}]]*/ '{}');
-    const EJEMPLOS = JSON.parse(/*[[${ejemplosJson}]]*/ '[]');
-</script>
+<!-- datos para plantilla.js (sin scripts en línea: la CSP solo permite archivos .js) -->
+<div id="datos" hidden th:data-plantilla="${datosJson}" th:data-generico="${genericoJson}"
+     th:data-ejemplos="${ejemplosJson}"></div>
 <script th:src="@{/plantilla.js}"></script>
 </body>
 </html>

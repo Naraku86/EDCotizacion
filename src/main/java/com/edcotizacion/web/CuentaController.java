@@ -4,15 +4,17 @@ import java.security.Principal;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.edcotizacion.seguridad.CambioCuenta;
 import com.edcotizacion.seguridad.UsuarioService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 /** Pantalla de entrada y cambio de usuario/contraseña. */
 @Controller
@@ -36,14 +38,14 @@ public class CuentaController {
     }
 
     @PostMapping("/cuenta")
-    public String guardar(Principal usuario, @RequestParam String actual, @RequestParam String nombre,
-            @RequestParam String nuevo, @RequestParam String confirmar,
+    public String guardar(Principal usuario, @Valid CambioCuenta cambio, BindingResult errores,
             HttpServletRequest request, RedirectAttributes ra) throws ServletException {
+        if (errores.hasErrors()) {
+            ra.addFlashAttribute("error", errores.getAllErrors().getFirst().getDefaultMessage());
+            return "redirect:/cuenta";
+        }
         try {
-            if (!nuevo.equals(confirmar)) {
-                throw new IllegalArgumentException("La contraseña nueva y su confirmación no coinciden.");
-            }
-            usuarios.cambiar(usuario.getName(), actual, nombre, nuevo);
+            usuarios.cambiar(usuario.getName(), cambio);
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("error", e.getMessage());
             return "redirect:/cuenta";

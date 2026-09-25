@@ -6,6 +6,10 @@
     'use strict';
 
     const $ = (sel, ctx = document) => ctx.querySelector(sel);
+    const DATOS = document.getElementById('datos').dataset;
+    const PLANTILLA = JSON.parse(DATOS.plantilla);
+    const GENERICO = JSON.parse(DATOS.generico);
+    const EJEMPLOS = JSON.parse(DATOS.ejemplos);
     const base = () => $('.barra .logo').getAttribute('href').replace(/\/?$/, '/');
     const URL_PLANTILLA = base() + 'configuracion/plantilla';
 

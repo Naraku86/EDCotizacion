@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 public class Estilo {
 
     private static final Pattern HEX = Pattern.compile("#[0-9a-fA-F]{6}");
+    private static final Pattern IMAGEN = Pattern.compile("data:image/(png|jpeg);base64,[A-Za-z0-9+/]+=*");
 
     private final String primario;
     private final String acento;
@@ -69,9 +70,9 @@ public class Estilo {
         return fmt(rango(v, def, min, max));
     }
 
-    /** Solo acepta imágenes incrustadas (data:image/...); cualquier otra cosa se ignora. */
+    /** Solo imágenes PNG/JPG incrustadas; cualquier otra cosa (URL, SVG, archivo) se ignora. */
     public String imagen(Object src) {
-        return src instanceof String s && s.startsWith("data:image/") && !s.contains("\"") ? s : null;
+        return src instanceof String s && IMAGEN.matcher(s).matches() ? s : null;
     }
 
     private static String hex(Object v, String def) {
