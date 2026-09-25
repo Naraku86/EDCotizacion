@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' · Cotizaciones'">Cotizaciones</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+<header th:fragment="barra(activo)" class="barra">
+    <a class="logo" th:href="@{/}"><th:block th:text="${marca.nombreParte(0)}">MI</th:block> <span th:text="${marca.nombreParte(1)}">EMPRESA</span></a>
+    <nav>
+        <a th:href="@{/}" th:classappend="${activo == 'lista'} ? 'activo'">Cotizaciones</a>
+        <a th:href="@{/configuracion}" th:classappend="${activo == 'config'} ? 'activo'">Configuración</a>
+    </nav>
+    <a class="btn primario nueva" th:href="@{/cotizaciones/nueva}">+ Nueva cotización</a>
+</header>
+</body>
+</html>

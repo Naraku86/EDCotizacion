@@ -1,0 +1,20 @@
+{
+  "estilo": {
+    "primario": "#243B53",
+    "acento": "#3E7CB1",
+    "texto": "#2B3A40",
+    "fuenteMarca": "Exo2",
+    "tamano": 8.5
+  },
+  "pie": {
+    "texto": "Mi Empresa  •  Productos  •  Servicios  •  Soporte",
+    "paginas": true
+  },
+  "bloques": [
+    { "id": "encabezado", "tipo": "encabezado", "titulo": "COTIZACIÓN", "logo": true, "nombre": true, "dosTonos": true, "mayusculas": true, "lema": true },
+    { "id": "partes", "tipo": "partes", "tituloProveedor": "DATOS DEL PROVEEDOR", "tituloCliente": "COTIZADO A" },
+    { "id": "detalle", "tipo": "detalle", "titulo": "Detalle de productos y servicios", "numero": true },
+    { "id": "totales", "tipo": "totales" },
+    { "id": "condiciones", "tipo": "condiciones", "titulo": "Condiciones comerciales" }
+  ]
+}

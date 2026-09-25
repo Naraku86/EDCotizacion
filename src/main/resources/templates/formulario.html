@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragmentos :: head(${cot.id} ? ${cot.folio} : 'Nueva cotización')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra('form')}"></header>
+<main>
+    <h1>
+        <span th:text="${cot.id} ? 'Cotización ' + ${cot.folio} : 'Nueva cotización'">Nueva cotización</span>
+        <small th:if="${cot.id}" th:text="${cot.estado.etiqueta}"></small>
+        <small th:unless="${cot.id}">el folio se asigna al guardar</small>
+    </h1>
+
+    <div id="error" class="aviso error" hidden></div>
+
+    <!-- Cliente -->
+    <section class="tarjeta">
+        <h2>Cliente</h2>
+        <div class="fila c-cliente">
+            <div>
+                <label for="cliente">Empresa / nombre <span id="cliente-nuevo" class="nuevo-tag" hidden>NUEVO · se agrega al guardar</span></label>
+                <div class="ac"><input id="cliente" autocomplete="off" placeholder="Escribe para buscar o capturar uno nuevo…"></div>
+            </div>
+            <div>
+                <label for="fecha">Fecha</label>
+                <input id="fecha" type="date">
+            </div>
+            <div>
+                <label for="vigencia">Vigencia (días)</label>
+                <input id="vigencia" type="number" min="0" class="num">
+            </div>
+        </div>
+        <details id="cliente-mas">
+            <summary>Más datos del cliente (opcional; solo se imprimen los que captures)</summary>
+            <div class="fila c-extra">
+                <div><label for="cl-contacto">Contacto</label><input id="cl-contacto"></div>
+                <div><label for="cl-telefono">Teléfono</label><input id="cl-telefono"></div>
+                <div><label for="cl-email">Correo</label><input id="cl-email" type="email"></div>
+                <div><label for="cl-rfc">RFC</label><input id="cl-rfc"></div>
+                <div class="ancho"><label for="cl-direccion">Dirección</label><input id="cl-direccion"></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Partidas -->
+    <section class="tarjeta">
+        <h2>Productos y servicios</h2>
+        <table class="partidas" id="partidas">
+            <thead>
+            <tr>
+                <th class="col-n">#</th>
+                <th>Producto / descripción</th>
+                <th class="col-cant num">Cant.</th>
+                <th class="col-costo num interno">Costo</th>
+                <th class="col-pct num interno">% Gan.</th>
+                <th class="col-precio num">P. unitario</th>
+                <th class="col-iva num">P. con IVA</th>
+                <th class="col-imp num">Importe</th>
+                <th class="col-gan num interno">Ganancia</th>
+                <th class="col-x"></th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div style="margin-top: 10px">
+            <button class="btn" id="agregar" type="button">+ Agregar producto</button>
+        </div>
+        <div class="ayuda">
+            Captura el <b>costo</b> y se sugiere el precio con el % de ganancia. También puedes escribir directo el
+            <b>P. unitario</b> o el <b>P. con IVA</b> (el precio final que quieres cobrar) y se calcula lo demás.
+            Las columnas en color <b>ámbar</b> son internas: no salen en el PDF.
+        </div>
+    </section>
+
+    <!-- Totales -->
+    <section class="pie-form">
+        <div>
+            <details class="tarjeta seccion" id="condiciones">
+                <summary>Condiciones comerciales</summary>
+                <div class="fila c-cond">
+                    <div><label for="formaPago">Forma de pago</label><textarea id="formaPago" rows="2"></textarea></div>
+                    <div><label for="tiempoEntrega">Tiempo de entrega</label><textarea id="tiempoEntrega" rows="2"></textarea></div>
+                    <div><label for="garantia">Garantía</label><textarea id="garantia" rows="2"></textarea></div>
+                    <div><label for="observaciones">Observaciones</label><textarea id="observaciones" rows="2"></textarea></div>
+                </div>
+                <div class="ayuda">Si dejas un campo vacío, esa fila no aparece en el PDF.</div>
+            </details>
+
+            <div class="interno-box">
+                <div class="titulo">Interno (no sale en el PDF)</div>
+                <table>
+                    <tr><td>Costo total</td><td id="t-costo">$0.00</td></tr>
+                    <tr><td>Ganancia</td><td id="t-ganancia">$0.00</td></tr>
+                    <tr><td>Margen sobre venta</td><td id="t-margen">–</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="tarjeta">
+            <table class="totales">
+                <tr><td>Subtotal</td><td id="t-subtotal">$0.00</td></tr>
+                <tr>
+                    <td>
+                        <label><input type="checkbox" id="aplicaIva"> IVA</label>
+                    </td>
+                    <td>
+                        <input id="tasaIva" class="tasa num" type="number" step="0.01" min="0"> %
+                        &nbsp; <span id="t-iva">$0.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Envío <span class="tenue">(sin IVA)</span></td>
+                    <td><input id="envio" class="num" inputmode="decimal" placeholder="0.00"></td>
+                </tr>
+                <tr class="total"><td>TOTAL</td><td id="t-total">$0.00</td></tr>
+            </table>
+            <div class="botonera" style="margin-top: 16px">
+                <a class="btn" th:href="@{/}">Cancelar</a>
+                <button class="btn" id="guardar" type="button">Guardar</button>
+                <button class="btn primario" id="guardar-pdf" type="button">Guardar y ver PDF</button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script th:inline="javascript">
+    const COT = JSON.parse(/*[[${cotJson}]]*/ '{}');
+    const GANANCIA_DEFAULT = Number(/*[[${gananciaDefault}]]*/ 30);
+</script>
+<script th:src="@{/cotizacion.js}"></script>
+</body>
+</html>

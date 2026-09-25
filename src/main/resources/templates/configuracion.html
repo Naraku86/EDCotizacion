@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragmentos :: head('Configuración')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra('config')}"></header>
+<main style="max-width: 900px">
+    <h1>Configuración</h1>
+
+    <div class="aviso ok" th:if="${mensaje}" th:text="${mensaje}"></div>
+
+    <section class="tarjeta">
+        <h2>Plantilla del PDF</h2>
+        <p style="margin-top: 0">
+            Datos de tu empresa, logo, colores y el orden de las secciones del PDF.
+            Se editan arrastrando bloques, con vista previa en vivo.
+        </p>
+        <div class="botonera" style="justify-content: flex-start">
+            <a class="btn primario" th:href="@{/configuracion/plantilla}">Editar plantilla</a>
+            <a class="btn" th:href="@{/configuracion/plantilla/muestra.pdf}" target="_blank">Ver PDF de muestra</a>
+        </div>
+    </section>
+
+    <form method="post" th:action="@{/configuracion}">
+        <section class="tarjeta">
+            <h2>Valores por defecto de cada cotización nueva</h2>
+            <div class="fila" style="grid-template-columns: repeat(3, 1fr)">
+                <div>
+                    <label>% de ganancia sugerido</label>
+                    <input name="ganancia.default" class="num" th:value="${cfg['ganancia.default']}">
+                </div>
+                <div>
+                    <label>IVA (%)</label>
+                    <input name="iva.tasa" class="num" th:value="${cfg['iva.tasa']}">
+                </div>
+                <div>
+                    <label>Vigencia (días)</label>
+                    <input name="vigencia.default" class="num" th:value="${cfg['vigencia.default']}">
+                </div>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Folio</h2>
+            <div class="fila" style="grid-template-columns: repeat(3, 1fr)">
+                <div>
+                    <label>Prefijo</label>
+                    <input name="folio.prefijo" th:value="${cfg['folio.prefijo']}">
+                </div>
+                <div>
+                    <label>Siguiente número</label>
+                    <input name="folio.siguiente" type="number" min="1" class="num" th:value="${cfg['folio.siguiente']}">
+                </div>
+                <div>
+                    <label>El siguiente folio será</label>
+                    <input disabled th:value="${folioSiguiente}">
+                </div>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Condiciones comerciales por defecto</h2>
+            <div class="fila c-cond">
+                <div><label>Forma de pago</label><textarea name="condicion.forma_pago" rows="2" th:text="${cfg['condicion.forma_pago']}"></textarea></div>
+                <div><label>Tiempo de entrega</label><textarea name="condicion.tiempo_entrega" rows="2" th:text="${cfg['condicion.tiempo_entrega']}"></textarea></div>
+                <div><label>Garantía</label><textarea name="condicion.garantia" rows="2" th:text="${cfg['condicion.garantia']}"></textarea></div>
+                <div><label>Observaciones</label><textarea name="condicion.observaciones" rows="2" th:text="${cfg['condicion.observaciones']}"></textarea></div>
+            </div>
+        </section>
+
+        <div class="botonera">
+            <button class="btn primario">Guardar configuración</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

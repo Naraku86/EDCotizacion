@@ -1,0 +1,20 @@
+# Carpeta de datos: base de datos y plantilla editable del PDF
+app:
+  home: ${user.home}/EDCotizacion
+  abrir-navegador: true
+
+server:
+  port: 8090
+
+spring:
+  application:
+    name: edcotizacion
+  datasource:
+    url: jdbc:sqlite:${app.home}/cotizaciones.db?foreign_keys=true
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+  flyway:
+    locations: classpath:db/migration
+  thymeleaf:
+    cache: false

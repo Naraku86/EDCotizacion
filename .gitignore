@@ -1,0 +1,13 @@
+target/
+nbproject/private/
+nb-configuration.xml
+nbactions.xml
+.idea/
+*.iml
+.vscode/
+*.db
+.github/modernize/
+*.db-journal
+
+# Scripts y datos de cada instalación (p. ej. los de tu propia empresa): no se publican
+local/

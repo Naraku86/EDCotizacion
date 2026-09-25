@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragmentos :: head('Cotizaciones')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra('lista')}"></header>
+<main>
+    <h1>Cotizaciones</h1>
+
+    <form class="filtros" method="get" th:action="@{/}">
+        <input type="search" name="q" th:value="${q}" placeholder="Buscar por folio, cliente o producto…" autofocus>
+        <select name="estado" onchange="this.form.submit()">
+            <option value="">Todos los estados</option>
+            <option th:each="e : ${estados}" th:value="${e}" th:text="${e.etiqueta}" th:selected="${e == estado}"></option>
+        </select>
+        <button class="btn">Buscar</button>
+    </form>
+
+    <div class="tarjeta" style="padding: 0 0 4px">
+        <table>
+            <thead>
+            <tr>
+                <th style="padding-left: 18px">Folio</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th class="num">Total</th>
+                <th>Vence</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${cotizaciones.isEmpty()}">
+                <td colspan="7" class="vacio">
+                    No hay cotizaciones todavía. <a th:href="@{/cotizaciones/nueva}">Crea la primera</a>.
+                </td>
+            </tr>
+            <tr th:each="c : ${cotizaciones}" th:classappend="${c.vencida} ? 'vencida'">
+                <td style="padding-left: 18px">
+                    <a class="folio" th:href="@{/cotizaciones/{id}/editar(id=${c.id})}" th:text="${c.folio}">COT-0001</a>
+                </td>
+                <td th:text="${@f.fecha(c.fecha)}"></td>
+                <td>
+                    <span th:text="${c.cliente.nombre}"></span>
+                    <div class="tenue" th:if="${c.cliente.contacto}" th:text="${c.cliente.contacto}"></div>
+                </td>
+                <td class="num" th:text="${@f.moneda(c.total)}"></td>
+                <td>
+                    <span th:text="${@f.fecha(c.vence)}" th:classappend="${c.vencida} ? 'vence-rojo'"></span>
+                    <span class="etiqueta" th:if="${c.vencida}">Vencida</span>
+                </td>
+                <td>
+                    <div class="estados">
+                        <form th:each="e : ${estados}" method="post"
+                              th:action="@{/cotizaciones/{id}/estado(id=${c.id})}">
+                            <button name="estado" th:value="${e}" th:text="${e.etiqueta}"
+                                    th:classappend="${e == c.estado} ? 'actual ' + ${e}"
+                                    th:disabled="${e == c.estado}"></button>
+                        </form>
+                    </div>
+                </td>
+                <td class="acciones">
+                    <a class="btn chico" target="_blank" th:href="@{/cotizaciones/{id}/pdf(id=${c.id})}">PDF</a>
+                    <a class="btn chico" th:href="@{/cotizaciones/{id}/editar(id=${c.id})}">Editar</a>
+                    <form method="post" th:action="@{/cotizaciones/{id}/duplicar(id=${c.id})}">
+                        <button class="btn chico" title="Crea una copia con folio nuevo">Duplicar</button>
+                    </form>
+                    <form method="post" th:action="@{/cotizaciones/{id}/eliminar(id=${c.id})}"
+                          th:data-folio="${c.folio}"
+                          onsubmit="return confirm('¿Eliminar la cotización ' + this.dataset.folio + '? No se puede deshacer.')">
+                        <button class="btn chico peligro">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>
