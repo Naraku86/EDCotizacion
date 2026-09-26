@@ -56,6 +56,11 @@ public class EdCotizacionApplication {
         // La carpeta de datos debe existir antes de que SQLite abra la base
         Files.createDirectories(arranque.home());
         System.setProperty("app.home", arranque.home().toString());
+        // Configuración propia de cada instalación: <carpeta de datos>/application.yml (opcional).
+        // Así se cambian opciones (red, puerto, demo…) sin tocar accesos directos ni el instalador.
+        if (System.getProperty("spring.config.additional-location") == null) {
+            System.setProperty("spring.config.additional-location", "optional:file:" + arranque.home() + "/");
+        }
         if (System.getProperty("logging.file.name") == null) {
             System.setProperty("logging.file.name", arranque.home().resolve("edcotizacion.log").toString());
         }

@@ -25,8 +25,7 @@ COPY --from=compilacion /src/target/edcotizacion.jar /app/edcotizacion.jar
 # del contenedor (el puerto se publica con -p).
 ENV APP_MODO=servidor \
     APP_HOME=/data \
-    SERVER_ADDRESS=0.0.0.0 \
-    APP_ABRIR_NAVEGADOR=false
+    SERVER_ADDRESS=0.0.0.0
 
 USER edcot
 VOLUME /data

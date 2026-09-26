@@ -32,4 +32,14 @@ class ArranqueTest {
     void rechazaUnModoDesconocido() {
         assertThrows(IllegalArgumentException.class, () -> Arranque.de(new String[] { "--app.modo=otro" }));
     }
+
+    @Test
+    void tomaPuertoYModoDelApplicationYmlDeLaCarpetaDeDatos(@org.junit.jupiter.api.io.TempDir Path carpeta) throws Exception {
+        java.nio.file.Files.writeString(carpeta.resolve("application.yml"), "server:\n  port: 9321\napp:\n  modo: servidor\n");
+        Arranque a = Arranque.de(new String[] { "--app.home=" + carpeta });
+        assertEquals(9321, a.puerto());
+        assertFalse(a.escritorio());
+        assertEquals(7000, Arranque.de(new String[] { "--app.home=" + carpeta, "--server.port=7000" }).puerto(),
+                "los argumentos mandan sobre el archivo");
+    }
 }

@@ -12,7 +12,7 @@ services:
     environment:
       TZ: America/Mexico_City
       # APP_DEMO_ACTIVO: "false"        # apaga el demo público en /demo
-      # SERVER_FORWARD_HEADERS_STRATEGY: native            # detrás de proxy: IP real del visitante
+      # SERVER_FORWARDHEADERSSTRATEGY: native              # detrás de proxy: IP real del visitante
       # SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"       # detrás de proxy con HTTPS
     restart: unless-stopped
 
