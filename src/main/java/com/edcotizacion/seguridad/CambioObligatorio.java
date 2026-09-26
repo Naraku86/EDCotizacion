@@ -30,12 +30,15 @@ public class CambioObligatorio implements HandlerInterceptor {
         return sesion != null && Boolean.TRUE.equals(sesion.getAttribute(ATRIBUTO));
     }
 
-    /** Al entrar: marca la sesión si usa la contraseña de fábrica y decide a dónde ir. */
-    static AuthenticationSuccessHandler alEntrar(UsuarioService usuarios) {
+    /**
+     * Al entrar: marca la sesión si usa la contraseña de fábrica y decide a dónde ir. En la
+     * instancia de prueba la contraseña de fábrica es la de todos y no se pide cambiarla.
+     */
+    static AuthenticationSuccessHandler alEntrar(UsuarioService usuarios, boolean prueba) {
         SavedRequestAwareAuthenticationSuccessHandler normal = new SavedRequestAwareAuthenticationSuccessHandler();
         normal.setDefaultTargetUrl("/");
         return (HttpServletRequest request, HttpServletResponse response, Authentication auth) -> {
-            if (usuarios.usaPasswordDefault(auth.getName())) {
+            if (!prueba && usuarios.usaPasswordDefault(auth.getName())) {
                 request.getSession().setAttribute(ATRIBUTO, Boolean.TRUE);
                 response.sendRedirect(request.getContextPath() + CUENTA);
                 return;

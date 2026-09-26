@@ -30,6 +30,7 @@
         </form>
     </div>
 </header>
+<div class="aviso-prueba" role="note" th:if="${prueba?.activa}" th:text="${prueba?.aviso}">Instancia de prueba</div>
 <div class="aviso-password" th:if="${passwordDefault}">
     Estás usando el usuario y contraseña de fábrica (admin / admin).
     <a th:href="@{/cuenta}">Cámbialos aquí</a>, sobre todo si otras computadoras de tu red pueden abrir la app.

@@ -155,6 +155,11 @@ public class CotizacionService {
         c.setModificada(LocalDateTime.now());
     }
 
+    @Transactional(readOnly = true)
+    public boolean hayCotizaciones() {
+        return cotizaciones.count() > 0;
+    }
+
     @Transactional
     public void eliminar(long id) {
         cotizaciones.delete(obtener(id));

@@ -23,6 +23,8 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.edcotizacion.prueba.InstanciaPrueba;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -77,7 +79,7 @@ public class SeguridadConfig {
     @Bean
     @Order(2)
     SecurityFilterChain seguridad(HttpSecurity http, UsuarioService usuarios, IntentosLogin intentos,
-            @Value("${app.demo.activo:true}") boolean demo) throws Exception {
+            InstanciaPrueba prueba, @Value("${app.demo.activo:true}") boolean demo) throws Exception {
         http
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/login", "/app.css", "/app.js", "/fuentes/**", "/favicon.ico", "/error").permitAll()
@@ -85,7 +87,7 @@ public class SeguridadConfig {
                 .anyRequest().authenticated())
             .addFilterBefore(new FiltroIntentosLogin(intentos), UsernamePasswordAuthenticationFilter.class)
             .formLogin(f -> f.loginPage("/login")
-                .successHandler(CambioObligatorio.alEntrar(usuarios))
+                .successHandler(CambioObligatorio.alEntrar(usuarios, prueba.activa()))
                 .failureUrl("/login?error")
                 .permitAll())
             .logout(l -> l.logoutSuccessUrl("/login?salio"))

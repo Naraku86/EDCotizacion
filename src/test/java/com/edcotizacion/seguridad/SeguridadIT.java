@@ -1,6 +1,7 @@
 package com.edcotizacion.seguridad;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
@@ -104,5 +105,12 @@ class SeguridadIT extends PruebaIntegracion {
         mvc.perform(post("/apagar")).andExpect(status().isForbidden());
         mvc.perform(post("/apagar").with(csrf())).andExpect(status().is3xxRedirection());
         mvc.perform(post("/apagar").with(user("admin"))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void fueraDelModoPruebaNoHayAvisoNiCredencialesPublicadas() throws Exception {
+        mvc.perform(get("/login")).andExpect(content().string(not(containsString("Instancia de prueba"))));
+        mvc.perform(get("/configuracion").with(user("admin")))
+                .andExpect(content().string(not(containsString("aviso-prueba"))));
     }
 }

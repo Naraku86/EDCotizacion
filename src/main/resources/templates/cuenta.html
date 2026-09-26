@@ -11,7 +11,12 @@
     </div>
     <div class="aviso error" th:if="${error}" th:text="${error}"></div>
 
-    <form class="tarjeta" method="post" th:action="@{/cuenta}">
+    <div class="tarjeta" th:if="${prueba?.activa}">
+        <p>En la instancia de prueba todos entran con usuario <b>admin</b> y contraseña <b>admin</b>, y no se
+           pueden cambiar.</p>
+        <p class="tenue">Para tener tu propia cuenta, instala EDCotizacion en tu computadora.</p>
+    </div>
+    <form class="tarjeta" method="post" th:action="@{/cuenta}" th:unless="${prueba?.activa}">
         <div class="campo">
             <label for="nombre">Usuario</label>
             <input id="nombre" name="nombre" th:value="${usuario}" autocomplete="username" required>

@@ -27,6 +27,10 @@
         <button class="btn primario">Entrar</button>
     </form>
     <p class="login-ayuda tenue" th:if="${passwordDefault}">Primera vez: usuario <b>admin</b>, contraseña <b>admin</b>.</p>
+    <div class="login-prueba" th:if="${prueba?.activa}">
+        <p>Entra con usuario <b>admin</b> y contraseña <b>admin</b>.</p>
+        <p class="tenue" th:text="${prueba?.aviso}"></p>
+    </div>
     <p class="login-ayuda" th:if="${demoActivo}"><a th:href="@{/demo}">Probar el demo sin cuenta →</a></p>
 </div>
 </body>

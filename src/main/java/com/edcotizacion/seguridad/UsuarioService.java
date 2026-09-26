@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.edcotizacion.prueba.InstanciaPrueba;
+
 /**
  * Usuarios de la app. La primera vez crea admin/admin, y quien entra con esa contraseña debe
  * cambiarla antes de usar la app (CambioObligatorio). Los intentos fallidos los cuenta IntentosLogin.
@@ -25,10 +27,12 @@ public class UsuarioService implements UserDetailsService, ApplicationRunner {
     public static final String PASSWORD_DEFAULT = "admin";
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
+    private final InstanciaPrueba prueba;
 
-    public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder) {
+    public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder, InstanciaPrueba prueba) {
         this.usuarios = usuarios;
         this.encoder = encoder;
+        this.prueba = prueba;
     }
 
     @Override
@@ -65,6 +69,9 @@ public class UsuarioService implements UserDetailsService, ApplicationRunner {
     /** Cambia usuario y contraseña (ya validados en forma). Lanza IllegalArgumentException con un mensaje para mostrar. */
     @Transactional
     public void cambiar(String actual, CambioCuenta cambio) {
+        if (prueba.activa()) {
+            throw new IllegalArgumentException("En la instancia de prueba no se puede cambiar el usuario ni la contraseña.");
+        }
         Usuario u = usuarios.findByNombre(actual).orElse(null);
         if (u == null || !encoder.matches(cambio.actual(), u.getPassword())) {
             throw new IllegalArgumentException("La contraseña actual no es correcta.");

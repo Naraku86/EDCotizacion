@@ -35,6 +35,9 @@ Los cambios se aplican al volver a abrir el programa.
 | `app.demo.pdf-por-minuto` | `10` | PDF del demo por minuto por IP. |
 | `app.demo.vistas-por-minuto` | `90` | Vistas previas del demo por minuto por IP. |
 | `app.demo.pdf-simultaneos` | `2` | PDF del demo generándose a la vez. |
+| `app.prueba.activa` | `false` | [Instancia de prueba pública](#instancia-de-prueba-pública). |
+| `app.prueba.datos-ejemplo` | `true` | En la instancia de prueba, cargar datos de ejemplo si la base está vacía. |
+| `app.prueba.aviso` | (texto) | Aviso que se muestra en todas las pantallas de la instancia de prueba. |
 | `server.servlet.session.timeout` | `12h` | Tiempo sin uso para cerrar la sesión. |
 | `server.forward-headers-strategy` | — | `native` detrás de un proxy inverso, para ver la IP real del visitante. |
 | `server.servlet.session.cookie.secure` | `false` | `true` si la app se usa por HTTPS. |
@@ -54,6 +57,19 @@ puerto en el firewall del sistema.
 En la red la información viaja por HTTP sin cifrar, incluida la contraseña. En una red de confianza
 (tu oficina) suele ser suficiente; para algo más, pon la app detrás de un proxy con HTTPS
 (ver [Servidor](servidor.md#https-con-proxy-inverso)).
+
+## Instancia de prueba pública
+
+Con `app.prueba.activa: true` la app queda lista para que cualquiera la pruebe con la aplicación
+completa (no solo el demo `/demo`):
+
+- Todos entran con usuario **admin** y contraseña **admin**; la pantalla de entrada lo indica.
+- La cuenta no se puede cambiar y no se pide cambiar la contraseña de fábrica.
+- Todas las pantallas muestran un aviso: todos comparten la cuenta y los datos se borran.
+- Si la base está vacía al arrancar, se cargan dos empresas y algunas cotizaciones de ejemplo.
+
+La app **no borra** los datos por sí misma: eso lo hace quien opera el servidor, por ejemplo
+recreando el contenedor con un volumen nuevo cada 8 horas (ver [Servidor](servidor.md)).
 
 ## Varias instalaciones en la misma computadora
 

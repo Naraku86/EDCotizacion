@@ -491,3 +491,13 @@ main.demo {
     .c-dos { grid-template-columns: minmax(0, 1fr); }
     .demo-lienzo { padding: 10px; }
 }
+
+/* Instancia de prueba pública */
+.aviso-prueba { background: #E8F1FB; color: #1E3A5F; padding: 8px max(20px, calc((100% - 1160px) / 2)); font-size: 13px; border-bottom: 1px solid #C9DCF2; }
+.editor-pagina > .aviso-prueba { flex-shrink: 0; }
+.login-prueba { margin-top: 22px; padding: 14px 16px; border-radius: var(--radio); background: #E8F1FB; color: #1E3A5F; font-size: 13.5px; }
+.login-prueba p { margin: 0; }
+.login-prueba p + p { margin-top: 6px; }
+@media (max-width: 760px) {
+    .aviso-prueba { padding: 10px 16px; }
+}

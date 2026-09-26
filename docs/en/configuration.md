@@ -35,6 +35,9 @@ Changes apply the next time the program starts.
 | `app.demo.pdf-por-minuto` | `10` | Demo PDFs per minute per IP. |
 | `app.demo.vistas-por-minuto` | `90` | Demo previews per minute per IP. |
 | `app.demo.pdf-simultaneos` | `2` | Demo PDFs generated at the same time. |
+| `app.prueba.activa` | `false` | [Public test instance](#public-test-instance). |
+| `app.prueba.datos-ejemplo` | `true` | In the test instance, load sample data when the database is empty. |
+| `app.prueba.aviso` | (text) | Notice shown on every page of the test instance. |
 | `server.servlet.session.timeout` | `12h` | Idle time before the session expires. |
 | `server.forward-headers-strategy` | — | `native` behind a reverse proxy, to see the visitor's real IP. |
 | `server.servlet.session.cookie.secure` | `false` | `true` when the app is used over HTTPS. |
@@ -55,6 +58,19 @@ system firewall.
 On the network, data travels over plain HTTP, password included. On a trusted network (your office)
 that is usually enough; otherwise put the app behind a reverse proxy with HTTPS
 (see [Server](server.md#https-with-a-reverse-proxy)).
+
+## Public test instance
+
+With `app.prueba.activa: true` the app is ready for anyone to try the full application (not only the
+`/demo` page):
+
+- Everybody signs in with user **admin** and password **admin**; the sign-in page says so.
+- The account cannot be changed and the default password does not have to be changed.
+- Every page shows a notice: the account is shared and the data is deleted.
+- If the database is empty on start-up, two companies and a few sample quotes are loaded.
+
+The app **does not delete** the data by itself: whoever runs the server does, for example by
+recreating the container with a new volume every 8 hours (see [Server](server.md)).
 
 ## Several installations on one computer
 

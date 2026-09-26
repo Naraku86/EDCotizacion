@@ -3,6 +3,20 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/). Versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - Unreleased
+
+**English**
+
+- Public test instance (`app.prueba.activa`): shared `admin` / `admin` account that cannot be
+  changed, notice on every page, credentials on the sign-in page and sample data when the database is
+  empty.
+
+**Español**
+
+- Instancia de prueba pública (`app.prueba.activa`): cuenta compartida `admin` / `admin` que no se
+  puede cambiar, aviso en todas las pantallas, credenciales en la pantalla de entrada y datos de
+  ejemplo cuando la base está vacía.
+
 ## [1.0.0] - 2026-09-25
 
 First public release. / Primera versión pública.
@@ -37,4 +51,5 @@ First public release. / Primera versión pública.
 - Instaladores para Windows (MSI), macOS (DMG, Apple Silicon e Intel) y Linux (DEB/RPM, x64 y arm64)
   con Java incluido; versiones portables; imagen de contenedor para Podman/Docker.
 
+[1.1.0]: https://github.com/Naraku86/EDCotizacion/releases/tag/v1.1.0
 [1.0.0]: https://github.com/Naraku86/EDCotizacion/releases/tag/v1.0.0
