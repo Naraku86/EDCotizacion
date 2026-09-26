@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import com.edcotizacion.escritorio.Arranque;
 import com.edcotizacion.pdf.Empresa;
 import com.edcotizacion.seguridad.UsuarioService;
 
@@ -14,10 +15,19 @@ public class Marca {
 
     private final UsuarioService usuarios;
     private final boolean demoActivo;
+    private final boolean escritorio;
 
-    public Marca(UsuarioService usuarios, @Value("${app.demo.activo:true}") boolean demoActivo) {
+    public Marca(UsuarioService usuarios, @Value("${app.demo.activo:true}") boolean demoActivo,
+            @Value("${app.modo:escritorio}") String modo) {
         this.usuarios = usuarios;
         this.demoActivo = demoActivo;
+        this.escritorio = Arranque.ESCRITORIO.equals(modo);
+    }
+
+    /** En modo escritorio la barra muestra "Cerrar programa". */
+    @ModelAttribute("escritorio")
+    public boolean escritorio() {
+        return escritorio;
     }
 
     @ModelAttribute("marca")

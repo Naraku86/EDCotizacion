@@ -1,6 +1,9 @@
 # Carpeta de datos: base de datos y plantilla editable del PDF
 app:
   home: ${user.home}/EDCotizacion
+  # escritorio: programa en una PC (abre el navegador, icono en la bandeja, "Cerrar programa")
+  # servidor: contenedor o servidor (nada de eso). En el contenedor: APP_MODO=servidor
+  modo: escritorio
   abrir-navegador: true
   # Demo público en /demo: sin login y sin guardar nada. false = apagado (la ruta pide sesión y no existe).
   demo:
@@ -49,3 +52,12 @@ spring:
     open-in-view: false
   thymeleaf:
     cache: false
+
+# Registro también en archivo: main() lo pone en <carpeta de datos>/edcotizacion.log (instalada, la
+# app no tiene consola). Aquí no, para que las pruebas nunca escriban en ~/EDCotizacion.
+# Rota a los 10 MB y guarda 7 archivos.
+logging:
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

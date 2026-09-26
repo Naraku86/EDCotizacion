@@ -8,6 +8,7 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -94,5 +95,14 @@ class SeguridadIT extends PruebaIntegracion {
                 .content("{\"diseno\":{},\"empresa\":{\"logo\":\"data:image/svg+xml;base64,PHN2Zz4=\"}}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("El logo debe ser una imagen PNG o JPG."));
+    }
+
+    @Test
+    void cerrarProgramaEstaEnLaBarraYPideSesionYToken() throws Exception {
+        mvc.perform(get("/configuracion").with(user("admin")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Cerrar programa")));
+        mvc.perform(post("/apagar")).andExpect(status().isForbidden());
+        mvc.perform(post("/apagar").with(csrf())).andExpect(status().is3xxRedirection());
+        mvc.perform(post("/apagar").with(user("admin"))).andExpect(status().isForbidden());
     }
 }

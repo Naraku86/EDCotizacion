@@ -11,7 +11,7 @@ public class SeguridadWeb implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new CambioObligatorio())
-                .excludePathPatterns(CambioObligatorio.CUENTA, "/login", "/logout", "/error",
+                .excludePathPatterns(CambioObligatorio.CUENTA, "/login", "/logout", "/error", "/apagar",
                         "/demo", "/demo/**", "/*.css", "/*.js", "/fuentes/**", "/favicon.ico");
     }
 }

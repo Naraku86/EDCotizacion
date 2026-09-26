@@ -24,6 +24,10 @@
         <a th:href="@{/cuenta}" th:classappend="${activo == 'cuenta'} ? 'activo'" th:aria-current="${activo == 'cuenta'} ? 'page'" title="Cambiar usuario o contraseña"
            sec:authentication="name">admin</a>
         <form method="post" th:action="@{/logout}"><button title="Cerrar sesión">Salir</button></form>
+        <form method="post" th:action="@{/apagar}" th:if="${escritorio}"
+              data-confirmar="¿Cerrar el programa? Para volver a usarlo tendrás que abrir EDCotizacion de nuevo.">
+            <button title="Detiene EDCotizacion en esta computadora">Cerrar programa</button>
+        </form>
     </div>
 </header>
 <div class="aviso-password" th:if="${passwordDefault}">

@@ -60,7 +60,7 @@ public record Empresa(
                 || Imagenes.medidasPermitidas(logo, LOGO_PIXELES_MAXIMO);
     }
 
-    /** "EV Soluciones" -> 0: "EV", 1: "Soluciones". Para el nombre en dos colores. */
+    /** "Mi Empresa" -> 0: "Mi", 1: "Empresa". Para el nombre en dos colores. */
     public String nombreParte(int i) {
         String n = nombre == null ? "" : nombre;
         int esp = n.indexOf(' ');
