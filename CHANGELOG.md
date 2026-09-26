@@ -3,7 +3,7 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/). Versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-09-25
 
 First public release. / Primera versión pública.
 
