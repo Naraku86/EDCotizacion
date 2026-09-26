@@ -6,7 +6,7 @@ Para usar EDCotizacion en **una computadora**, conviene el [instalador](instalac
 contenedor es para **servidores**: una PC que atiende a varias personas, un NAS o un servidor en
 internet (por ejemplo, para publicar el demo).
 
-La imagen `ghcr.io/OWNER/edcotizacion` existe para `amd64` y `arm64`. Todos los comandos funcionan
+La imagen `ghcr.io/naraku86/edcotizacion` existe para `amd64` y `arm64`. Todos los comandos funcionan
 igual cambiando `podman` por `docker`.
 
 ## Arrancar
@@ -16,7 +16,7 @@ podman run -d --name edcotizacion \
   -p 8090:8090 \
   -v edcotizacion-datos:/data \
   -e TZ=America/Mexico_City \
-  ghcr.io/OWNER/edcotizacion:latest
+  ghcr.io/naraku86/edcotizacion:latest
 ```
 
 Abre `http://<servidor>:8090`, entra con **admin** / **admin** y elige una contraseña nueva (la app
@@ -65,7 +65,7 @@ podman run -d --name edcotizacion \
   -v edcotizacion-datos:/data \
   -e SERVER_FORWARDHEADERSSTRATEGY=native \
   -e SERVER_SERVLET_SESSION_COOKIE_SECURE=true \
-  ghcr.io/OWNER/edcotizacion:latest
+  ghcr.io/naraku86/edcotizacion:latest
 ```
 
 `Caddyfile`:
@@ -96,7 +96,7 @@ misma forma.
 ## Actualizar
 
 ```bash
-podman pull ghcr.io/OWNER/edcotizacion:latest
+podman pull ghcr.io/naraku86/edcotizacion:latest
 podman rm -f edcotizacion
 # vuelve a correr el mismo "podman run" de arriba
 ```

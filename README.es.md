@@ -1,7 +1,7 @@
 # EDCotizacion
 
-[![CI](https://github.com/OWNER/EDCotizacion/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/EDCotizacion/actions/workflows/ci.yml)
-[![Versión](https://img.shields.io/github/v/release/OWNER/EDCotizacion?label=versi%C3%B3n)](https://github.com/OWNER/EDCotizacion/releases/latest)
+[![CI](https://github.com/Naraku86/EDCotizacion/actions/workflows/ci.yml/badge.svg)](https://github.com/Naraku86/EDCotizacion/actions/workflows/ci.yml)
+[![Versión](https://img.shields.io/github/v/release/Naraku86/EDCotizacion?label=versi%C3%B3n)](https://github.com/Naraku86/EDCotizacion/releases/latest)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
 
 [English](README.md) · **Español**
@@ -33,7 +33,7 @@ internet. También puede correr en un servidor con Podman o Docker.
 
 ## Descargar
 
-Descarga la última versión en **[Releases](https://github.com/OWNER/EDCotizacion/releases/latest)**.
+Descarga la última versión en **[Releases](https://github.com/Naraku86/EDCotizacion/releases/latest)**.
 Java viene incluido; no hay que instalar nada más.
 
 | Sistema | Archivo |
@@ -66,7 +66,7 @@ Tus datos viven en la carpeta `EDCotizacion` dentro de tu carpeta de usuario. Pa
 
 ```bash
 podman run -d --name edcotizacion -p 8090:8090 -v edcotizacion-datos:/data \
-  ghcr.io/OWNER/edcotizacion:latest
+  ghcr.io/naraku86/edcotizacion:latest
 ```
 
 Funciona igual con `docker`. La [guía de servidor](docs/es/servidor.md) explica Compose, HTTPS con

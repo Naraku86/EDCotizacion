@@ -3,7 +3,7 @@
 # Si la publicas en internet, ponla detrás de un proxy con HTTPS y descomenta las dos variables.
 services:
   edcotizacion:
-    image: ghcr.io/OWNER/edcotizacion:latest
+    image: ghcr.io/naraku86/edcotizacion:latest
     # build: .   # para construirla desde el código en lugar de descargarla
     ports:
       - "8090:8090"

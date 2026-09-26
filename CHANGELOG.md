@@ -37,4 +37,4 @@ First public release. / Primera versión pública.
 - Instaladores para Windows (MSI), macOS (DMG, Apple Silicon e Intel) y Linux (DEB/RPM, x64 y arm64)
   con Java incluido; versiones portables; imagen de contenedor para Podman/Docker.
 
-[1.0.0]: https://github.com/OWNER/EDCotizacion/releases/tag/v1.0.0
+[1.0.0]: https://github.com/Naraku86/EDCotizacion/releases/tag/v1.0.0

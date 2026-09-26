@@ -2,7 +2,7 @@
 
 [English](../en/installation.md) · **Español**
 
-Descarga el archivo de tu sistema en [Releases](https://github.com/OWNER/EDCotizacion/releases/latest).
+Descarga el archivo de tu sistema en [Releases](https://github.com/Naraku86/EDCotizacion/releases/latest).
 Todos incluyen Java: no hay que instalar nada más.
 
 - [Windows](#windows)

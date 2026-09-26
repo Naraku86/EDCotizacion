@@ -6,7 +6,7 @@
 
 Please **do not open a public issue**. Use GitHub's private reporting instead:
 **Security › Report a vulnerability** in this repository
-(<https://github.com/OWNER/EDCotizacion/security/advisories/new>).
+(<https://github.com/Naraku86/EDCotizacion/security/advisories/new>).
 
 Include the version, how to reproduce it and the impact you expect. You will get an answer as soon as
 possible; fixes are released as a new version and credited in the changelog unless you prefer otherwise.
@@ -39,7 +39,7 @@ When exposing the app to a network you do not trust, put it behind a reverse pro
 
 Por favor **no abras un issue público**. Usa el reporte privado de GitHub:
 **Security › Report a vulnerability** en este repositorio
-(<https://github.com/OWNER/EDCotizacion/security/advisories/new>).
+(<https://github.com/Naraku86/EDCotizacion/security/advisories/new>).
 
 Incluye la versión, cómo reproducirlo y el impacto que esperas. Recibirás respuesta lo antes posible;
 las correcciones se publican como una versión nueva y se da crédito en el registro de cambios, salvo

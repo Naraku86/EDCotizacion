@@ -6,7 +6,7 @@ To use EDCotizacion on **one computer**, the [installer](installation.md) is the
 container image is meant for **servers**: a PC shared by several people, a NAS, or an internet-facing
 server (for example, to publish the demo).
 
-The `ghcr.io/OWNER/edcotizacion` image is available for `amd64` and `arm64`. Every command works the
+The `ghcr.io/naraku86/edcotizacion` image is available for `amd64` and `arm64`. Every command works the
 same with `docker` instead of `podman`.
 
 ## Start
@@ -16,7 +16,7 @@ podman run -d --name edcotizacion \
   -p 8090:8090 \
   -v edcotizacion-data:/data \
   -e TZ=America/Mexico_City \
-  ghcr.io/OWNER/edcotizacion:latest
+  ghcr.io/naraku86/edcotizacion:latest
 ```
 
 Open `http://<server>:8090`, sign in with **admin** / **admin** and choose a new password (the app
@@ -66,7 +66,7 @@ podman run -d --name edcotizacion \
   -v edcotizacion-data:/data \
   -e SERVER_FORWARDHEADERSSTRATEGY=native \
   -e SERVER_SERVLET_SESSION_COOKIE_SECURE=true \
-  ghcr.io/OWNER/edcotizacion:latest
+  ghcr.io/naraku86/edcotizacion:latest
 ```
 
 `Caddyfile`:
@@ -96,7 +96,7 @@ To restore, stop the container and copy the backup back to `/data/cotizaciones.d
 ## Updating
 
 ```bash
-podman pull ghcr.io/OWNER/edcotizacion:latest
+podman pull ghcr.io/naraku86/edcotizacion:latest
 podman rm -f edcotizacion
 # run the same "podman run" command as above
 ```

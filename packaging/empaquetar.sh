@@ -79,7 +79,7 @@ case "$SO" in
             --linux-package-name edcotizacion --linux-shortcut
             --linux-menu-group Office --linux-app-category office
             --linux-rpm-license-type MIT
-            --linux-deb-maintainer "${MANTENEDOR_DEB:-edcotizacion@users.noreply.github.com}"
+            --linux-deb-maintainer "${MANTENEDOR_DEB:-10275851+Naraku86@users.noreply.github.com}"
         ) ;;
 esac
 

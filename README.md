@@ -1,7 +1,7 @@
 # EDCotizacion
 
-[![CI](https://github.com/OWNER/EDCotizacion/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/EDCotizacion/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/OWNER/EDCotizacion)](https://github.com/OWNER/EDCotizacion/releases/latest)
+[![CI](https://github.com/Naraku86/EDCotizacion/actions/workflows/ci.yml/badge.svg)](https://github.com/Naraku86/EDCotizacion/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Naraku86/EDCotizacion)](https://github.com/Naraku86/EDCotizacion/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **English** · [Español](README.es.md)
@@ -35,7 +35,7 @@ internet connection. It can also run on a server with Podman or Docker.
 
 ## Download
 
-Get the latest version from **[Releases](https://github.com/OWNER/EDCotizacion/releases/latest)**.
+Get the latest version from **[Releases](https://github.com/Naraku86/EDCotizacion/releases/latest)**.
 Java is included; nothing else needs to be installed.
 
 | System | File |
@@ -68,7 +68,7 @@ Your data lives in the `EDCotizacion` folder inside your user folder. To back up
 
 ```bash
 podman run -d --name edcotizacion -p 8090:8090 -v edcotizacion-data:/data \
-  ghcr.io/OWNER/edcotizacion:latest
+  ghcr.io/naraku86/edcotizacion:latest
 ```
 
 Works the same with `docker`. See the [server guide](docs/en/server.md) for Compose, HTTPS behind a
