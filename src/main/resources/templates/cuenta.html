@@ -6,6 +6,9 @@
 <main id="contenido" class="pagina-cuenta">
     <h1>Usuario y contraseña</h1>
 
+    <div class="aviso error" role="alert" th:if="${obligatorio}">
+        Entraste con la contraseña de fábrica. Para usar la aplicación, primero elige una contraseña nueva.
+    </div>
     <div class="aviso error" th:if="${error}" th:text="${error}"></div>
 
     <form class="tarjeta" method="post" th:action="@{/cuenta}">

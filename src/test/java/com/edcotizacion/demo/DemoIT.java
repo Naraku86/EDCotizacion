@@ -126,12 +126,39 @@ class DemoIT extends PruebaIntegracion {
                 .andExpect(jsonPath("$.error").value("Agrega al menos un producto."));
     }
 
+    /** PNG de ancho × alto píxeles como data URI (una sola fila o columna: pesa pocos bytes). */
+    private static String png(int ancho, int alto) throws Exception {
+        var out = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(new java.awt.image.BufferedImage(ancho, alto,
+                java.awt.image.BufferedImage.TYPE_BYTE_GRAY), "png", out);
+        return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(out.toByteArray());
+    }
+
+    @Test
+    void rechazaLogosConDemasiadosPixelesAunquePesenPoco() throws Exception {
+        Empresa enorme = new Empresa("X", null, null, null, null, null, null, null, png(Empresa.LOGO_PIXELES_MAXIMO + 1, 1));
+        mvc.perform(post("/demo/vista").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo(form(enorme, form().partidas()))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("El logo debe ser una imagen PNG o JPG válida de máximo 2000 × 2000 píxeles."));
+        Empresa normal = new Empresa("X", null, null, null, null, null, null, null, png(300, 100));
+        mvc.perform(post("/demo/vista").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo(form(normal, form().partidas()))))
+                .andExpect(status().isOk());
+        String gifDisfrazado = png(10, 10).replace("data:image/png;base64,", "data:image/png;base64,R0lGODlh");
+        Empresa falsa = new Empresa("X", null, null, null, null, null, null, null, gifDisfrazado);
+        mvc.perform(post("/demo/vista").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo(form(falsa, form().partidas()))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("El logo debe ser una imagen PNG o JPG válida de máximo 2000 × 2000 píxeles."));
+    }
+
     @Test
     void sinTokenCsrfSeRechazaYElRestoSiguePidiendoSesion() throws Exception {
         mvc.perform(post("/demo/pdf").contentType(MediaType.APPLICATION_JSON).content(cuerpo(form())))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/")).andExpect(redirectedUrl("/login"));
         mvc.perform(get("/configuracion")).andExpect(status().is3xxRedirection());
-        mvc.perform(get("/demo/otra-cosa")).andExpect(status().is3xxRedirection());
+        mvc.perform(get("/demo/otra-cosa")).andExpect(status().isNotFound());
     }
 }

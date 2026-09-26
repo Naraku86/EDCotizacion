@@ -2,7 +2,9 @@ package com.edcotizacion.pdf;
 
 import static com.edcotizacion.comun.Textos.limpio;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -24,11 +26,15 @@ public record Empresa(
         @Size(max = 500, message = "La dirección es demasiado larga.") String direccion,
         @Size(max = 200, message = "El nombre del ejecutivo es demasiado largo.") String ejecutivo,
         @Size(max = Empresa.LOGO_MAXIMO, message = "El logo es demasiado grande (máximo 1.5 MB).")
-        @Pattern(regexp = "data:image/(png|jpeg);base64,[A-Za-z0-9+/]+=*", message = "El logo debe ser una imagen PNG o JPG.")
+        @Pattern(regexp = Empresa.LOGO_PATRON, message = "El logo debe ser una imagen PNG o JPG.")
         String logo) {
 
     /** ~1.5 MB de imagen en base64. */
     public static final int LOGO_MAXIMO = 2_000_000;
+    /** El editor y el demo reducen el logo a 800 px; esto deja margen sin permitir imágenes enormes. */
+    public static final int LOGO_PIXELES_MAXIMO = 2000;
+    static final String LOGO_PATRON = "data:image/(png|jpeg);base64,[A-Za-z0-9+/]+=*";
+    private static final java.util.regex.Pattern LOGO = java.util.regex.Pattern.compile(LOGO_PATRON);
 
     public Empresa {
         nombre = limpio(nombre);
@@ -40,6 +46,18 @@ public record Empresa(
         direccion = limpio(direccion);
         ejecutivo = limpio(ejecutivo);
         logo = limpio(logo);
+    }
+
+    /**
+     * Las medidas se revisan leyendo solo el encabezado de la imagen. Si el logo ni siquiera tiene
+     * el formato esperado, ese error ya lo reporta @Pattern y aquí no se repite.
+     */
+    @JsonIgnore
+    @AssertTrue(message = "El logo debe ser una imagen PNG o JPG válida de máximo " + LOGO_PIXELES_MAXIMO + " × "
+            + LOGO_PIXELES_MAXIMO + " píxeles.")
+    public boolean isLogoConMedidasValidas() {
+        return logo == null || logo.length() > LOGO_MAXIMO || !LOGO.matcher(logo).matches()
+                || Imagenes.medidasPermitidas(logo, LOGO_PIXELES_MAXIMO);
     }
 
     /** "EV Soluciones" -> 0: "EV", 1: "Soluciones". Para el nombre en dos colores. */

@@ -9,6 +9,7 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -30,8 +31,10 @@ public record CotizacionForm(
         boolean aplicaIva,
         @NotNull(message = "Falta la tasa de IVA.")
         @PositiveOrZero(message = "La tasa de IVA no puede ser negativa.")
-        @DecimalMax(value = "100", message = "La tasa de IVA no puede pasar de 100%.") BigDecimal tasaIva,
-        @PositiveOrZero(message = "El envío no puede ser negativo.") BigDecimal envio,
+        @DecimalMax(value = "100", message = "La tasa de IVA no puede pasar de 100%.")
+        @Digits(integer = 3, fraction = 4, message = "La tasa de IVA tiene demasiados decimales.") BigDecimal tasaIva,
+        @PositiveOrZero(message = "El envío no puede ser negativo.")
+        @Digits(integer = 12, fraction = 4, message = "El envío es demasiado grande o tiene demasiados decimales.") BigDecimal envio,
         @Size(max = 1000, message = "La forma de pago es demasiado larga.") String formaPago,
         @Size(max = 1000, message = "El tiempo de entrega es demasiado largo.") String tiempoEntrega,
         @Size(max = 1000, message = "La garantía es demasiado larga.") String garantia,
@@ -44,10 +47,16 @@ public record CotizacionForm(
             @NotNull(message = "falta la descripción.")
             @Size(max = 1000, message = "la descripción es demasiado larga.") String descripcion,
             @NotNull(message = "falta la cantidad.")
-            @Positive(message = "la cantidad debe ser mayor a 0.") BigDecimal cantidad,
-            @PositiveOrZero(message = "el costo no puede ser negativo.") BigDecimal costo,
+            @Positive(message = "la cantidad debe ser mayor a 0.")
+            @Digits(integer = 12, fraction = 4, message = "la cantidad es demasiado grande o tiene demasiados decimales.")
+            BigDecimal cantidad,
+            @PositiveOrZero(message = "el costo no puede ser negativo.")
+            @Digits(integer = 12, fraction = 4, message = "el costo es demasiado grande o tiene demasiados decimales.")
+            BigDecimal costo,
             @NotNull(message = "falta el precio.")
-            @PositiveOrZero(message = "el precio no puede ser negativo.") BigDecimal precioUnitario,
+            @PositiveOrZero(message = "el precio no puede ser negativo.")
+            @Digits(integer = 12, fraction = 4, message = "el precio es demasiado grande o tiene demasiados decimales.")
+            BigDecimal precioUnitario,
             BigDecimal pctGanancia) {
 
         public PartidaForm {

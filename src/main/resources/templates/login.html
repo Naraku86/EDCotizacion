@@ -10,8 +10,8 @@
         <p class="tenue">Ingresa tus datos para continuar.</p>
     </div>
 
-    <div class="aviso error" role="alert" th:if="${param.error}">Usuario o contraseña incorrectos.</div>
-    <div class="aviso error" role="alert" th:if="${param.bloqueado}">Demasiados intentos fallidos. Espera 5 minutos y vuelve a intentar.</div>
+    <!-- mismo mensaje para contraseña incorrecta, usuario inexistente o bloqueo: no revela cuál fue -->
+    <div class="aviso error" role="alert" th:if="${param.error}">Usuario o contraseña incorrectos. Tras 5 intentos fallidos hay que esperar 5 minutos.</div>
     <div class="aviso ok" role="status" th:if="${param.salio}">Cerraste sesión.</div>
     <div class="aviso ok" role="status" th:if="${param.cambio}">Datos cambiados. Entra con tu nuevo usuario y contraseña.</div>
 

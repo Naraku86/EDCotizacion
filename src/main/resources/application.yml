@@ -11,6 +11,8 @@ app:
 
 server:
   port: 8090
+  # Solo esta computadora. Para usarla desde otras de la red: --server.address=0.0.0.0 (ver README)
+  address: 127.0.0.1
   servlet:
     session:
       timeout: 12h

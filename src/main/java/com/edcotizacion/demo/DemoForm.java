@@ -10,6 +10,7 @@ import java.util.Map;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -41,8 +42,10 @@ public record DemoForm(
         boolean aplicaIva,
         @NotNull(message = "Falta la tasa de IVA.")
         @PositiveOrZero(message = "La tasa de IVA no puede ser negativa.")
-        @DecimalMax(value = "100", message = "La tasa de IVA no puede pasar de 100%.") BigDecimal tasaIva,
-        @PositiveOrZero(message = "El envío no puede ser negativo.") BigDecimal envio,
+        @DecimalMax(value = "100", message = "La tasa de IVA no puede pasar de 100%.")
+        @Digits(integer = 3, fraction = 4, message = "La tasa de IVA tiene demasiados decimales.") BigDecimal tasaIva,
+        @PositiveOrZero(message = "El envío no puede ser negativo.")
+        @Digits(integer = 12, fraction = 4, message = "El envío es demasiado grande o tiene demasiados decimales.") BigDecimal envio,
         @Size(max = 1000, message = "La forma de pago es demasiado larga.") String formaPago,
         @Size(max = 1000, message = "El tiempo de entrega es demasiado largo.") String tiempoEntrega,
         @Size(max = 1000, message = "La garantía es demasiado larga.") String garantia,

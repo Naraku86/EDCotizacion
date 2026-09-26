@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import com.edcotizacion.comun.NoEncontradoException;
+import com.edcotizacion.seguridad.LimiteDePeticion.PeticionDemasiadoGrandeException;
 
 /**
  * Errores de las peticiones JSON en un solo formato: {"error": "mensaje para el usuario"}.
@@ -50,6 +51,11 @@ public class ErroresApi {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Error> ilegible(HttpMessageNotReadableException e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof PeticionDemasiadoGrandeException grande) {
+                return error(HttpStatus.CONTENT_TOO_LARGE, grande.getMessage());
+            }
+        }
         log.debug("JSON no válido", e);
         return error(HttpStatus.BAD_REQUEST, "Los datos enviados no tienen el formato esperado.");
     }

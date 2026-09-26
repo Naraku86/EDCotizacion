@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.edcotizacion.seguridad.CambioCuenta;
+import com.edcotizacion.seguridad.CambioObligatorio;
 import com.edcotizacion.seguridad.UsuarioService;
 
 import jakarta.servlet.ServletException;
@@ -32,8 +33,9 @@ public class CuentaController {
     }
 
     @GetMapping("/cuenta")
-    public String cuenta(Principal usuario, Model model) {
+    public String cuenta(Principal usuario, HttpServletRequest request, Model model) {
         model.addAttribute("usuario", usuario.getName());
+        model.addAttribute("obligatorio", CambioObligatorio.pendiente(request));
         return "cuenta";
     }
 
@@ -52,6 +54,9 @@ public class CuentaController {
         }
         // la sesión quedó con el nombre anterior: se vuelve a entrar con los datos nuevos
         request.logout();
+        if (request.getSession(false) != null) {
+            request.getSession(false).invalidate();
+        }
         return "redirect:/login?cambio";
     }
 }

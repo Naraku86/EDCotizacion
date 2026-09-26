@@ -83,4 +83,15 @@ class CotizacionFormTest {
         assertEquals(List.of(), f.partidas());
         assertTrue(errores(f).contains("Agrega al menos un producto."));
     }
+
+    @Test
+    void limitaElTamanoYLosDecimalesDeLosMontos() {
+        DatosCliente cliente = new DatosCliente("Escuela", null, null, null, null, null);
+        Set<String> e = errores(form(cliente,
+                partida("Grande", "1E+13", "1"), partida("Decimales", "1", "0.00001")));
+        assertTrue(e.contains("la cantidad es demasiado grande o tiene demasiados decimales."), e::toString);
+        assertTrue(e.contains("el precio es demasiado grande o tiene demasiados decimales."), e::toString);
+        assertTrue(errores(form(cliente, partida("Normal", "999999999999.5", "1234.5678"))).isEmpty(),
+                "12 enteros y 4 decimales siguen permitidos");
+    }
 }
