@@ -1,0 +1,20 @@
+# Ejemplo para servidor:  podman compose up -d   (o: docker compose up -d)
+# Luego abre http://localhost:8090 (usuario admin / contraseña admin; pide cambiarla al entrar).
+# Si la publicas en internet, ponla detrás de un proxy con HTTPS y descomenta las dos variables.
+services:
+  edcotizacion:
+    image: ghcr.io/OWNER/edcotizacion:latest
+    # build: .   # para construirla desde el código en lugar de descargarla
+    ports:
+      - "8090:8090"
+    volumes:
+      - edcotizacion-datos:/data
+    environment:
+      TZ: America/Mexico_City
+      # APP_DEMO_ACTIVO: "false"        # apaga el demo público en /demo
+      # SERVER_FORWARD_HEADERS_STRATEGY: native            # detrás de proxy: IP real del visitante
+      # SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"       # detrás de proxy con HTTPS
+    restart: unless-stopped
+
+volumes:
+  edcotizacion-datos:

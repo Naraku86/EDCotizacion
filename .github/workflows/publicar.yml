@@ -1,0 +1,152 @@
+# Publica una versión: al subir una etiqueta vX.Y.Z (igual a la versión del pom.xml) corre las
+# pruebas, arma los instaladores de Windows, Linux y macOS, publica la imagen en GitHub Container
+# Registry y crea el release con todos los archivos y sus sumas SHA-256.
+#
+#   git tag v1.0.0 && git push origin v1.0.0
+name: Publicar versión
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+jobs:
+  jar:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: La etiqueta coincide con la versión del pom.xml
+        id: version
+        run: |
+          POM=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          ETIQUETA="${GITHUB_REF_NAME#v}"
+          if [ "$POM" != "$ETIQUETA" ]; then
+            echo "::error::La etiqueta $GITHUB_REF_NAME no coincide con la versión del pom.xml ($POM)"
+            exit 1
+          fi
+          echo "version=$POM" >> "$GITHUB_OUTPUT"
+      - name: Compilar y probar
+        run: mvn -B verify
+      - uses: actions/upload-artifact@v7
+        with:
+          name: jar
+          path: target/edcotizacion.jar
+          if-no-files-found: error
+
+  instaladores:
+    needs: jar
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025      # WiX 3.14 viene instalado (jpackage lo usa para el .msi)
+            tipos: msi portable
+          - os: ubuntu-22.04      # glibc más antigua: los paquetes corren en más distribuciones
+            tipos: deb rpm portable
+          - os: ubuntu-22.04-arm
+            tipos: deb rpm portable
+          - os: macos-15          # Apple Silicon
+            tipos: dmg
+          - os: macos-15-intel
+            tipos: dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/download-artifact@v8
+        with:
+          name: jar
+          path: target
+      - name: Herramientas para .rpm
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm
+      - name: WiX en el PATH
+        if: runner.os == 'Windows'
+        shell: bash
+        run: echo "C:/Program Files (x86)/WiX Toolset v3.14/bin" >> "$GITHUB_PATH"
+      - name: Empaquetar
+        shell: bash
+        run: packaging/empaquetar.sh "${{ needs.jar.outputs.version }}" ${{ matrix.tipos }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: instaladores-${{ matrix.os }}
+          path: target/dist/*
+          if-no-files-found: error
+
+  contenedor:
+    needs: jar
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Nombre de la imagen (GHCR exige minúsculas)
+        run: echo "IMAGEN=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/edcotizacion" >> "$GITHUB_ENV"
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Containerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGEN }}:${{ needs.jar.outputs.version }}
+            ${{ env.IMAGEN }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ needs.jar.outputs.version }}
+            org.opencontainers.image.licenses=MIT
+
+  release:
+    needs: [jar, instaladores, contenedor]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: instaladores-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: jar
+          path: dist
+      - name: Sumas SHA-256
+        working-directory: dist
+        run: |
+          mv edcotizacion.jar "EDCotizacion-${{ needs.jar.outputs.version }}.jar"
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Crear el release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.jar.outputs.version }}
+        run: |
+          sed -e "s#{{REPO}}#$GITHUB_REPOSITORY#g" \
+              -e "s#{{IMAGEN}}#ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/edcotizacion#g" \
+              -e "s#{{VERSION}}#$VERSION#g" packaging/notas-release.md > notas.md
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "EDCotizacion $VERSION" \
+            --notes-file notas.md \
+            --verify-tag

@@ -1,0 +1,11 @@
+# Fuera de la imagen: compilados, datos locales y configuración de cada instalación
+target/
+local/
+.git/
+.github/
+.vscode/
+.idea/
+nbproject/
+*.db
+*.db-journal
+*.log

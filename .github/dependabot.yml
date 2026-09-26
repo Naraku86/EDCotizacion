@@ -1,0 +1,15 @@
+# Avisa (con un pull request) cuando hay versiones nuevas de dependencias o de acciones,
+# incluidas las que corrigen vulnerabilidades.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      spring:
+        patterns: ["org.springframework*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
