@@ -20,7 +20,7 @@
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <openhtmltopdf.version>1.1.86</openhtmltopdf.version>
+        <openhtmltopdf.version>1.1.87</openhtmltopdf.version>
     </properties>
 
     <dependencies>
